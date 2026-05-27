@@ -64,6 +64,25 @@
         outline: 0;
       }
 
+      .input-unit {
+        position: relative;
+      }
+
+      .input-unit input {
+        padding-right: 52px;
+      }
+
+      .input-unit span {
+        color: var(--color-muted);
+        font-size: 12px;
+        font-weight: 750;
+        pointer-events: none;
+        position: absolute;
+        right: 10px;
+        top: 50%;
+        transform: translateY(-50%);
+      }
+
       input:disabled,
       input[readonly],
       select:disabled {
@@ -315,6 +334,25 @@
         max-width: 860px;
         min-height: 1100px;
         padding: 38px 44px;
+        position: relative;
+      }
+
+      .draft-stamp {
+        border: 2px solid var(--color-danger);
+        border-radius: var(--radius-sm);
+        color: var(--color-danger);
+        display: none;
+        font-size: 28px;
+        font-weight: 800;
+        letter-spacing: 0;
+        padding: 8px 14px;
+        position: absolute;
+        right: 44px;
+        top: 92px;
+      }
+
+      .draft-stamp.visible {
+        display: inline-flex;
       }
 
       .pdf-topline {
@@ -458,6 +496,7 @@
           <div class="actions">
             <button class="btn secondary" type="button" id="resetBtn">Reset sample</button>
             <button class="btn secondary" type="button" id="saveDraftBtn">Save draft</button>
+            <button class="btn secondary" type="button" id="previewDraftBtn">Preview</button>
             <button class="btn primary" type="button" id="generateStatementBtn">Generate statement</button>
           </div>
         </header>
@@ -496,7 +535,10 @@
                 </div>
                 <div class="field">
                   <label for="btcPrice">Avg BTC price for reporting</label>
-                  <input id="btcPrice" type="number" min="0" step="100" value="96400">
+                  <div class="input-unit">
+                    <input id="btcPrice" type="number" min="0" step="100" value="96400">
+                    <span>USD</span>
+                  </div>
                 </div>
                 <div class="field">
                   <label>Publish schedule</label>
@@ -508,18 +550,6 @@
                 <div class="field">
                   <label for="publishAt">Scheduled publish time</label>
                   <input id="publishAt" type="datetime-local" value="2026-03-01T09:00" disabled>
-                </div>
-                <div class="field">
-                  <label for="investorUnits">Investor units</label>
-                  <input id="investorUnits" type="number" min="0" step="1" value="50">
-                </div>
-                <div class="field">
-                  <label for="fleetUnits">Fleet units</label>
-                  <input id="fleetUnits" type="number" min="1" step="1" value="900">
-                </div>
-                <div class="field">
-                  <label for="grossBtc">Fleet BTC mined</label>
-                  <input id="grossBtc" type="number" min="0" step="0.000001" value="2.993226">
                 </div>
               </div>
               <div class="reference-strip">
@@ -537,6 +567,22 @@
                 <span class="pill">From F2Pool</span>
               </div>
               <div class="form-grid">
+                <div class="field">
+                  <label for="investorUnits">Investor units</label>
+                  <input id="investorUnits" type="number" min="0" step="1" value="50" disabled>
+                </div>
+                <div class="field">
+                  <label for="fleetUnits">Fleet units</label>
+                  <input id="fleetUnits" type="number" min="1" step="1" value="900" disabled>
+                </div>
+                <div class="field">
+                  <label for="grossBtc">Fleet BTC mined</label>
+                  <input id="grossBtc" type="number" min="0" step="0.000001" value="2.993226" disabled>
+                </div>
+                <div class="field">
+                  <label for="investorBtcMined">Investor units BTC mined</label>
+                  <input id="investorBtcMined" type="number" min="0" step="0.000001" value="0.166290" disabled>
+                </div>
                 <div class="field">
                   <label for="hashratePerUnit">Hashrate per unit TH/s</label>
                   <input id="hashratePerUnit" type="number" min="0" step="1" value="240" disabled>
@@ -574,7 +620,10 @@
               <div class="form-grid">
                 <div class="field">
                   <label for="powerRate">Power rate per kWh</label>
-                  <input id="powerRate" type="number" min="0" step="0.001" value="0.062">
+                  <div class="input-unit">
+                    <input id="powerRate" type="number" min="0" step="0.001" value="0.062">
+                    <span>USD</span>
+                  </div>
                 </div>
                 <div class="field">
                   <label for="powerTaxRate">Power tax %</label>
@@ -582,11 +631,17 @@
                 </div>
                 <div class="field">
                   <label for="hostingRate">Hosting rate per kWh</label>
-                  <input id="hostingRate" type="number" min="0" step="0.001" value="0.020">
+                  <div class="input-unit">
+                    <input id="hostingRate" type="number" min="0" step="0.001" value="0.020">
+                    <span>USD</span>
+                  </div>
                 </div>
                 <div class="field">
                   <label for="equipmentValue">Equipment value per unit</label>
-                  <input id="equipmentValue" type="number" min="0" step="1" value="4267">
+                  <div class="input-unit">
+                    <input id="equipmentValue" type="number" min="0" step="1" value="4267">
+                    <span>USD</span>
+                  </div>
                 </div>
                 <div class="field">
                   <label for="insuranceRate">Insurance rate p.a. %</label>
@@ -594,15 +649,24 @@
                 </div>
                 <div class="field">
                   <label for="custodyFee">Custody fee monthly</label>
-                  <input id="custodyFee" type="number" min="0" step="1" value="1500">
+                  <div class="input-unit">
+                    <input id="custodyFee" type="number" min="0" step="1" value="1500">
+                    <span>USD</span>
+                  </div>
                 </div>
                 <div class="field">
                   <label for="auditAnnual">Compliance annual</label>
-                  <input id="auditAnnual" type="number" min="0" step="100" value="15000">
+                  <div class="input-unit">
+                    <input id="auditAnnual" type="number" min="0" step="100" value="15000">
+                    <span>USD</span>
+                  </div>
                 </div>
                 <div class="field">
                   <label for="maintenance">Repairs & maintenance</label>
-                  <input id="maintenance" type="number" min="0" step="100" value="0">
+                  <div class="input-unit">
+                    <input id="maintenance" type="number" min="0" step="100" value="0">
+                    <span>USD</span>
+                  </div>
                 </div>
                 <div class="field">
                   <label for="warrantyStatus">Warranty status</label>
@@ -619,7 +683,10 @@
               <div class="form-grid">
                 <div class="field">
                   <label for="settlementRate">Fixed BTC/USD rate</label>
-                  <input id="settlementRate" type="number" min="0" step="100" value="96400">
+                  <div class="input-unit">
+                    <input id="settlementRate" type="number" min="0" step="100" value="96400">
+                    <span>USD</span>
+                  </div>
                 </div>
                 <div class="field">
                   <label for="settlementAt">Settlement time</label>
@@ -758,6 +825,7 @@
           </div>
           <div class="actions">
             <button class="btn secondary" type="button" data-close-modal>Close</button>
+            <button class="btn secondary" type="button" id="downloadDraftBtn">Download draft</button>
             <button class="btn primary" type="button">Publish statement</button>
           </div>
         </div>
@@ -783,6 +851,7 @@
           </div>
 
           <article class="pdf-page" aria-label="Investor monthly mining statement PDF preview">
+            <div class="draft-stamp" id="draftStamp">DRAFT</div>
             <div class="pdf-topline">
               <div class="pdf-brand">
                 <strong>TKD Group</strong>
@@ -905,8 +974,10 @@
       };
 
       const externalReferencePrice = 96420;
+      const dailyBtcYieldPerTh = 0.0000004999107142857143;
       const ids = Object.keys(defaults);
       let latestData = {};
+      let previewIsDraft = false;
       const money = new Intl.NumberFormat("en-US", {
         style: "currency",
         currency: "USD",
@@ -984,10 +1055,10 @@
         const investorUnits = value("investorUnits");
         const fleetUnits = Math.max(value("fleetUnits"), 1);
         const share = investorUnits / fleetUnits;
-        const grossBtc = value("grossBtc");
         const uptime = value("uptime") / 100;
         const activeHours = 24 * uptime;
         const fleetHashrate = fleetUnits * value("hashratePerUnit");
+        const grossBtc = fleetHashrate * dailyBtcYieldPerTh * uptime * periodDays;
         const fleetKw = fleetUnits * value("powerDrawUnit");
         const fleetMw = fleetKw / 1000;
         const kwh = fleetKw * activeHours * periodDays;
@@ -1048,6 +1119,8 @@
           waterfallRowsData
         };
 
+        document.getElementById("grossBtc").value = grossBtc.toFixed(6);
+        document.getElementById("investorBtcMined").value = investorGrossBtc.toFixed(6);
         document.getElementById("fleetHashrate").textContent = `${number.format(fleetHashrate)} TH/s`;
         document.getElementById("fleetPower").textContent = `${fleetMw.toFixed(2)} MW`;
         document.getElementById("activeHours").textContent = activeHours.toFixed(2);
@@ -1096,7 +1169,8 @@
         return `<tr><td>${label}</td><td class="right">${btc(btcAmount)}</td><td class="right">${usd(usdAmount)}</td></tr>`;
       }
 
-      function fillPreview() {
+      function fillPreview(isDraft = false) {
+        previewIsDraft = isDraft;
         calculate();
         const investor = selectedOption("investorSelect");
         const project = selectedOption("projectSelect");
@@ -1106,7 +1180,10 @@
         document.getElementById("previewProject").textContent = project.value;
         document.getElementById("previewMonth").textContent = month || "Not set";
         document.getElementById("previewInvestor").textContent = investor.value;
-        document.getElementById("previewSchedule").textContent = schedule;
+        document.getElementById("previewSchedule").textContent = isDraft ? `${schedule} · Draft` : schedule;
+        document.getElementById("previewTitle").textContent = isDraft ? "PDF preview - draft" : "PDF preview";
+        document.getElementById("draftStamp").classList.toggle("visible", isDraft);
+        document.getElementById("downloadDraftBtn").hidden = !isDraft;
         document.getElementById("pdfProjectLine").textContent = project.value;
         document.getElementById("pdfProjectName").textContent = project.value;
         document.getElementById("pdfInvestorName").textContent = investor.value;
@@ -1132,6 +1209,21 @@
           .join("");
       }
 
+      function downloadDraft() {
+        fillPreview(true);
+        const investor = selectedOption("investorSelect").value.replaceAll(" ", "-").toLowerCase();
+        const month = document.getElementById("statementMonth").value || "statement";
+        const html = `<!doctype html><html><head><meta charset="utf-8"><title>Tokenest statement draft</title><style>${document.querySelector("style").textContent}</style></head><body>${document.querySelector(".pdf-page").outerHTML}</body></html>`;
+        const blob = new Blob([html], { type: "text/html" });
+        const link = document.createElement("a");
+        link.href = URL.createObjectURL(blob);
+        link.download = `tokenest-${investor}-${month}-draft.html`;
+        document.body.appendChild(link);
+        link.click();
+        URL.revokeObjectURL(link.href);
+        link.remove();
+      }
+
       ids.forEach((id) => document.getElementById(id).addEventListener("input", calculate));
       ["settlementAt", "settlementRef"].forEach((id) => document.getElementById(id).addEventListener("input", calculate));
       ["investorSelect", "statementMonth", "publishAt"].forEach((id) => {
@@ -1151,10 +1243,15 @@
       });
       document.getElementById("warrantyStatus").addEventListener("change", calculate);
       document.getElementById("saveDraftBtn").addEventListener("click", () => openModal("draftModal"));
-      document.getElementById("generateStatementBtn").addEventListener("click", () => {
-        fillPreview();
+      document.getElementById("previewDraftBtn").addEventListener("click", () => {
+        fillPreview(true);
         openModal("previewModal");
       });
+      document.getElementById("generateStatementBtn").addEventListener("click", () => {
+        fillPreview(false);
+        openModal("previewModal");
+      });
+      document.getElementById("downloadDraftBtn").addEventListener("click", downloadDraft);
       document.querySelectorAll("[data-close-modal]").forEach((button) => {
         button.addEventListener("click", closeModals);
       });

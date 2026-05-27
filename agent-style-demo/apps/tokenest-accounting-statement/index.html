@@ -310,15 +310,22 @@
       .summary-strip {
         display: grid;
         gap: 12px;
-        grid-template-columns: repeat(4, minmax(0, 1fr));
+        grid-template-columns: repeat(2, minmax(0, 1fr));
         margin-bottom: var(--space-md);
+        margin-left: auto;
+        margin-right: auto;
+        max-width: 720px;
       }
 
       .summary-item {
+        align-items: center;
         background: var(--color-surface-muted);
         border: 1px solid var(--color-border);
         border-radius: var(--radius-sm);
+        display: grid;
+        min-height: 78px;
         padding: 12px;
+        text-align: center;
       }
 
       .summary-item strong {
@@ -495,9 +502,7 @@
           </div>
           <div class="actions">
             <button class="btn secondary" type="button" id="resetBtn">Reset sample</button>
-            <button class="btn secondary" type="button" id="saveDraftBtn">Save draft</button>
-            <button class="btn secondary" type="button" id="previewDraftBtn">Preview</button>
-            <button class="btn primary" type="button" id="generateStatementBtn">Generate statement</button>
+            <button class="btn primary" type="button" id="previewGenerateBtn">Preview & Generate</button>
           </div>
         </header>
 
@@ -569,11 +574,11 @@
               <div class="form-grid">
                 <div class="field">
                   <label for="investorUnits">Investor units</label>
-                  <input id="investorUnits" type="number" min="0" step="1" value="50" disabled>
+                  <input id="investorUnits" type="number" min="0" step="1" value="50">
                 </div>
                 <div class="field">
                   <label for="fleetUnits">Fleet units</label>
-                  <input id="fleetUnits" type="number" min="1" step="1" value="900" disabled>
+                  <input id="fleetUnits" type="number" min="1" step="1" value="900">
                 </div>
                 <div class="field">
                   <label for="grossBtc">Fleet BTC mined</label>
@@ -825,8 +830,9 @@
           </div>
           <div class="actions">
             <button class="btn secondary" type="button" data-close-modal>Close</button>
+            <button class="btn secondary" type="button" id="modalSaveDraftBtn">Save Draft</button>
             <button class="btn secondary" type="button" id="downloadDraftBtn">Download draft</button>
-            <button class="btn primary" type="button">Publish statement</button>
+            <button class="btn primary" type="button">Publish</button>
           </div>
         </div>
         <div class="modal-body">
@@ -1183,7 +1189,6 @@
         document.getElementById("previewSchedule").textContent = isDraft ? `${schedule} · Draft` : schedule;
         document.getElementById("previewTitle").textContent = isDraft ? "PDF preview - draft" : "PDF preview";
         document.getElementById("draftStamp").classList.toggle("visible", isDraft);
-        document.getElementById("downloadDraftBtn").hidden = !isDraft;
         document.getElementById("pdfProjectLine").textContent = project.value;
         document.getElementById("pdfProjectName").textContent = project.value;
         document.getElementById("pdfInvestorName").textContent = investor.value;
@@ -1242,15 +1247,11 @@
         });
       });
       document.getElementById("warrantyStatus").addEventListener("change", calculate);
-      document.getElementById("saveDraftBtn").addEventListener("click", () => openModal("draftModal"));
-      document.getElementById("previewDraftBtn").addEventListener("click", () => {
+      document.getElementById("previewGenerateBtn").addEventListener("click", () => {
         fillPreview(true);
         openModal("previewModal");
       });
-      document.getElementById("generateStatementBtn").addEventListener("click", () => {
-        fillPreview(false);
-        openModal("previewModal");
-      });
+      document.getElementById("modalSaveDraftBtn").addEventListener("click", () => openModal("draftModal"));
       document.getElementById("downloadDraftBtn").addEventListener("click", downloadDraft);
       document.querySelectorAll("[data-close-modal]").forEach((button) => {
         button.addEventListener("click", closeModals);

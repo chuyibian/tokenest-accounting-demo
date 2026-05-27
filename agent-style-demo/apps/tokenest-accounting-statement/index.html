@@ -1,0 +1,651 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Tokenest Monthly Statement Builder</title>
+    <link rel="stylesheet" href="../shared/shared.css">
+    <style>
+      :root {
+        --field-bg: #fbfcfe;
+        --accent-soft: #e8f4ee;
+      }
+
+      .workspace {
+        display: grid;
+        gap: var(--space-md);
+        grid-template-columns: minmax(360px, 0.92fr) minmax(420px, 1.08fr);
+      }
+
+      .section-band {
+        display: grid;
+        gap: var(--space-md);
+      }
+
+      .form-grid {
+        display: grid;
+        gap: 12px;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+      }
+
+      .form-grid.two {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      .field {
+        display: grid;
+        gap: 6px;
+        min-width: 0;
+      }
+
+      label {
+        color: var(--color-muted);
+        font-size: var(--font-size-sm);
+        font-weight: 650;
+      }
+
+      input,
+      select {
+        background: var(--field-bg);
+        border: 1px solid var(--color-border);
+        border-radius: var(--radius-sm);
+        color: var(--color-text);
+        font: inherit;
+        height: 38px;
+        min-width: 0;
+        padding: 0 10px;
+        width: 100%;
+      }
+
+      input:focus,
+      select:focus {
+        border-color: var(--color-brand);
+        box-shadow: 0 0 0 3px rgba(35, 87, 137, 0.12);
+        outline: 0;
+      }
+
+      .subhead {
+        align-items: center;
+        display: flex;
+        justify-content: space-between;
+        gap: var(--space-sm);
+        margin-bottom: var(--space-md);
+      }
+
+      .subhead h2 {
+        margin-bottom: 0;
+      }
+
+      .pill {
+        background: var(--color-surface-muted);
+        border-radius: 999px;
+        color: var(--color-brand-strong);
+        display: inline-flex;
+        font-size: 12px;
+        font-weight: 750;
+        padding: 5px 9px;
+        white-space: nowrap;
+      }
+
+      .line-total {
+        background: var(--color-surface-muted);
+        border: 1px solid var(--color-border);
+        border-radius: var(--radius-sm);
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto;
+        gap: var(--space-sm);
+        margin-top: var(--space-md);
+        padding: 12px;
+      }
+
+      .line-total strong,
+      .waterfall-total strong {
+        font-size: var(--font-size-lg);
+      }
+
+      .formula-list {
+        display: grid;
+        gap: 10px;
+      }
+
+      .formula-row {
+        border-bottom: 1px solid var(--color-border);
+        display: grid;
+        gap: 4px;
+        grid-template-columns: minmax(150px, 0.42fr) minmax(0, 0.58fr);
+        padding-bottom: 10px;
+      }
+
+      .formula-row:last-child {
+        border-bottom: 0;
+        padding-bottom: 0;
+      }
+
+      .formula-row code {
+        color: var(--color-brand-strong);
+        font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+        font-size: 12px;
+        white-space: normal;
+      }
+
+      .table-wrap {
+        overflow-x: auto;
+      }
+
+      .number {
+        font-variant-numeric: tabular-nums;
+        text-align: right;
+        white-space: nowrap;
+      }
+
+      .waterfall-table td:nth-child(2),
+      .waterfall-table td:nth-child(3),
+      .waterfall-table th:nth-child(2),
+      .waterfall-table th:nth-child(3) {
+        text-align: right;
+      }
+
+      .positive {
+        color: var(--color-success);
+        font-weight: 700;
+      }
+
+      .negative {
+        color: var(--color-danger);
+        font-weight: 700;
+      }
+
+      .waterfall-total {
+        align-items: center;
+        background: var(--accent-soft);
+        border: 1px solid #b9dec9;
+        border-radius: var(--radius-md);
+        display: grid;
+        gap: var(--space-sm);
+        grid-template-columns: minmax(0, 1fr) auto;
+        margin-top: var(--space-md);
+        padding: var(--space-md);
+      }
+
+      .audit-grid {
+        display: grid;
+        gap: var(--space-md);
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+      }
+
+      .audit-box {
+        border: 1px solid var(--color-border);
+        border-radius: var(--radius-sm);
+        padding: 12px;
+      }
+
+      .audit-box strong {
+        display: block;
+        font-size: 20px;
+        margin-top: 6px;
+      }
+
+      @media (max-width: 1180px) {
+        .workspace,
+        .content-grid {
+          grid-template-columns: 1fr;
+        }
+      }
+
+      @media (max-width: 760px) {
+        .form-grid,
+        .form-grid.two,
+        .audit-grid,
+        .metric-grid {
+          grid-template-columns: 1fr;
+        }
+
+        .formula-row,
+        .line-total,
+        .waterfall-total {
+          grid-template-columns: 1fr;
+        }
+
+        .number {
+          text-align: left;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="shell">
+      <aside class="nav">
+        <div class="brand">
+          <strong>Tokenest</strong>
+          <span>Finance operations</span>
+        </div>
+        <a class="active" href="#">Monthly statement builder</a>
+        <a href="../codex-ops-dashboard/index.html">Ops dashboard</a>
+        <a href="../../docs/design-system.md">Design system</a>
+      </aside>
+
+      <main class="main">
+        <header class="topbar">
+          <div>
+            <h1>Monthly statement builder</h1>
+            <p class="muted">Enter operating inputs once, then review the generated cost pool and investor waterfall.</p>
+          </div>
+          <div class="actions">
+            <button class="btn secondary" type="button" id="resetBtn">Reset sample</button>
+            <button class="btn primary" type="button">Generate statement</button>
+          </div>
+        </header>
+
+        <section class="metric-grid" aria-label="Statement summary">
+          <div class="panel">
+            <div class="metric-label">Investor gross BTC</div>
+            <div class="metric-value" id="metricInvestorBtc">0.166290</div>
+          </div>
+          <div class="panel">
+            <div class="metric-label">Operating cost share</div>
+            <div class="metric-value" id="metricCostShare">$12.15k</div>
+          </div>
+          <div class="panel">
+            <div class="metric-label">Platform fees</div>
+            <div class="metric-value" id="metricFees">0.016629</div>
+          </div>
+          <div class="panel">
+            <div class="metric-label">Net BTC to investor</div>
+            <div class="metric-value" id="metricNetBtc">0.023588</div>
+          </div>
+        </section>
+
+        <section class="workspace">
+          <div class="section-band">
+            <div class="panel">
+              <div class="subhead">
+                <h2>Statement setup</h2>
+                <span class="pill">Accounting input</span>
+              </div>
+              <div class="form-grid">
+                <div class="field">
+                  <label for="statementMonth">Statement month</label>
+                  <input id="statementMonth" type="month" value="2026-02">
+                </div>
+                <div class="field">
+                  <label for="periodDays">Period days</label>
+                  <input id="periodDays" type="number" min="1" step="1" value="28">
+                </div>
+                <div class="field">
+                  <label for="btcPrice">Avg BTC price for reporting</label>
+                  <input id="btcPrice" type="number" min="0" step="100" value="96400">
+                </div>
+                <div class="field">
+                  <label for="investorUnits">Investor units</label>
+                  <input id="investorUnits" type="number" min="0" step="1" value="50">
+                </div>
+                <div class="field">
+                  <label for="fleetUnits">Fleet units</label>
+                  <input id="fleetUnits" type="number" min="1" step="1" value="900">
+                </div>
+                <div class="field">
+                  <label for="grossBtc">Fleet BTC mined</label>
+                  <input id="grossBtc" type="number" min="0" step="0.000001" value="2.993226">
+                </div>
+              </div>
+            </div>
+
+            <div class="panel">
+              <div class="subhead">
+                <h2>Asset performance</h2>
+                <span class="pill">Mining basis</span>
+              </div>
+              <div class="form-grid">
+                <div class="field">
+                  <label for="hashratePerUnit">Hashrate per unit TH/s</label>
+                  <input id="hashratePerUnit" type="number" min="0" step="1" value="240">
+                </div>
+                <div class="field">
+                  <label for="powerDrawUnit">Power draw per unit kW</label>
+                  <input id="powerDrawUnit" type="number" min="0" step="0.01" value="3.89">
+                </div>
+                <div class="field">
+                  <label for="uptime">Server uptime %</label>
+                  <input id="uptime" type="number" min="0" max="100" step="0.1" value="99">
+                </div>
+              </div>
+              <div class="audit-grid" style="margin-top: 16px;">
+                <div class="audit-box">
+                  <span class="muted">Fleet hashrate</span>
+                  <strong id="fleetHashrate">216,000 TH/s</strong>
+                </div>
+                <div class="audit-box">
+                  <span class="muted">Fleet power draw</span>
+                  <strong id="fleetPower">3.50 MW</strong>
+                </div>
+                <div class="audit-box">
+                  <span class="muted">Active hours per day</span>
+                  <strong id="activeHours">23.76</strong>
+                </div>
+              </div>
+            </div>
+
+            <div class="panel">
+              <div class="subhead">
+                <h2>Operating cost inputs</h2>
+                <span class="pill">Cost pool</span>
+              </div>
+              <div class="form-grid">
+                <div class="field">
+                  <label for="powerRate">Power rate per kWh</label>
+                  <input id="powerRate" type="number" min="0" step="0.001" value="0.062">
+                </div>
+                <div class="field">
+                  <label for="powerTaxRate">Power tax %</label>
+                  <input id="powerTaxRate" type="number" min="0" step="0.1" value="14.9">
+                </div>
+                <div class="field">
+                  <label for="hostingRate">Hosting rate per kWh</label>
+                  <input id="hostingRate" type="number" min="0" step="0.001" value="0.020">
+                </div>
+                <div class="field">
+                  <label for="equipmentValue">Equipment value per unit</label>
+                  <input id="equipmentValue" type="number" min="0" step="1" value="4267">
+                </div>
+                <div class="field">
+                  <label for="insuranceRate">Insurance rate p.a. %</label>
+                  <input id="insuranceRate" type="number" min="0" step="0.1" value="1.1">
+                </div>
+                <div class="field">
+                  <label for="custodyFee">Custody fee monthly</label>
+                  <input id="custodyFee" type="number" min="0" step="1" value="1500">
+                </div>
+                <div class="field">
+                  <label for="auditAnnual">Compliance annual</label>
+                  <input id="auditAnnual" type="number" min="0" step="100" value="15000">
+                </div>
+                <div class="field">
+                  <label for="maintenance">Repairs & maintenance</label>
+                  <input id="maintenance" type="number" min="0" step="100" value="0">
+                </div>
+                <div class="field">
+                  <label for="warrantyStatus">Warranty status</label>
+                  <select id="warrantyStatus">
+                    <option>Within warranty</option>
+                    <option>Out of warranty</option>
+                  </select>
+                </div>
+              </div>
+              <div class="subhead" style="margin-top: 24px;">
+                <h2>Reserve settlement</h2>
+                <span class="pill">Payment basis</span>
+              </div>
+              <div class="form-grid">
+                <div class="field">
+                  <label for="settlementRate">Fixed BTC/USD rate</label>
+                  <input id="settlementRate" type="number" min="0" step="100" value="96400">
+                </div>
+                <div class="field">
+                  <label for="settlementAt">Settlement time</label>
+                  <input id="settlementAt" type="datetime-local" value="2026-02-28T16:30">
+                </div>
+                <div class="field">
+                  <label for="settlementRef">Payment reference</label>
+                  <input id="settlementRef" type="text" value="RES-FEB26-POWER-001">
+                </div>
+              </div>
+              <div class="line-total">
+                <span>
+                  <strong>Total operating costs</strong><br>
+                  <span class="muted" id="settlementSummary">Full fleet monthly cost pool paid from reserve, before investor pro-ration.</span>
+                </span>
+                <strong class="number" id="totalOperatingCosts">$218,762.52</strong>
+              </div>
+              <div class="audit-grid" style="margin-top: 16px;">
+                <div class="audit-box">
+                  <span class="muted">Reserve rate</span>
+                  <strong id="settlementRatePreview">$96,400</strong>
+                </div>
+                <div class="audit-box">
+                  <span class="muted">Paid at</span>
+                  <strong id="settlementTimePreview">2026-02-28 16:30</strong>
+                </div>
+                <div class="audit-box">
+                  <span class="muted">Fleet cost in BTC</span>
+                  <strong id="fleetCostBtc">2.269321</strong>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="section-band">
+            <div class="panel">
+              <div class="subhead">
+                <h2>Operating costs breakdown</h2>
+                <span class="pill">Calculated</span>
+              </div>
+              <div class="table-wrap">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>Cost item</th>
+                      <th>Basis</th>
+                      <th class="number">USD</th>
+                    </tr>
+                  </thead>
+                  <tbody id="costRows"></tbody>
+                </table>
+              </div>
+            </div>
+
+            <div class="panel">
+              <div class="subhead">
+                <h2>Earnings & fee waterfall</h2>
+                <span class="pill">Statement preview</span>
+              </div>
+              <div class="table-wrap">
+                <table class="waterfall-table">
+                  <thead>
+                    <tr>
+                      <th>Line item</th>
+                      <th>BTC</th>
+                      <th>USD est.</th>
+                    </tr>
+                  </thead>
+                  <tbody id="waterfallRows"></tbody>
+                </table>
+              </div>
+              <div class="waterfall-total">
+                <span>
+                  <strong>Net BTC to investor</strong><br>
+                  <span class="muted">After pro-rated operating costs and platform fees.</span>
+                </span>
+                <strong class="number" id="netInvestorTotal">+0.023588 BTC</strong>
+              </div>
+            </div>
+
+            <div class="panel">
+              <div class="subhead">
+                <h2>Formula mapping</h2>
+                <span class="pill">Audit trail</span>
+              </div>
+              <div class="formula-list">
+                <div class="formula-row">
+                  <strong>Investor share</strong>
+                  <code>Investor units / fleet units</code>
+                </div>
+                <div class="formula-row">
+                  <strong>Energy consumed</strong>
+                  <code>Fleet kW × active hours/day × period days</code>
+                </div>
+                <div class="formula-row">
+                  <strong>Operating cost share</strong>
+                  <code>Total operating costs × investor share</code>
+                </div>
+                <div class="formula-row">
+                  <strong>Cost converted to BTC</strong>
+                  <code>Operating cost share USD / fixed reserve settlement rate</code>
+                </div>
+                <div class="formula-row">
+                  <strong>Platform fees</strong>
+                  <code>Gross investor BTC × operator/admin fee rates</code>
+                </div>
+                <div class="formula-row">
+                  <strong>Investor net</strong>
+                  <code>Gross investor BTC - operating cost BTC - platform fee BTC</code>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <script>
+      const defaults = {
+        periodDays: 28,
+        btcPrice: 96400,
+        settlementRate: 96400,
+        investorUnits: 50,
+        fleetUnits: 900,
+        grossBtc: 2.993226,
+        hashratePerUnit: 240,
+        powerDrawUnit: 3.89,
+        uptime: 99,
+        powerRate: 0.062,
+        powerTaxRate: 14.9,
+        hostingRate: 0.02,
+        equipmentValue: 4267,
+        insuranceRate: 1.1,
+        custodyFee: 1500,
+        auditAnnual: 15000,
+        maintenance: 0
+      };
+
+      const ids = Object.keys(defaults);
+      const money = new Intl.NumberFormat("en-US", {
+        style: "currency",
+        currency: "USD",
+        maximumFractionDigits: 2
+      });
+      const compactMoney = new Intl.NumberFormat("en-US", {
+        style: "currency",
+        currency: "USD",
+        notation: "compact",
+        maximumFractionDigits: 2
+      });
+      const number = new Intl.NumberFormat("en-US", { maximumFractionDigits: 2 });
+
+      function value(id) {
+        return Number(document.getElementById(id).value) || 0;
+      }
+
+      function btc(value) {
+        const sign = value > 0 ? "+" : value < 0 ? "-" : "";
+        return `${sign}${Math.abs(value).toFixed(6)}`;
+      }
+
+      function usd(value) {
+        const sign = value > 0 ? "+" : value < 0 ? "-" : "";
+        return `${sign}${money.format(Math.abs(value))}`;
+      }
+
+      function row(label, basis, amount) {
+        return `<tr><td>${label}</td><td class="muted">${basis}</td><td class="number">${money.format(amount)}</td></tr>`;
+      }
+
+      function displayDateTime(value) {
+        if (!value) return "Not set";
+        return value.replace("T", " ");
+      }
+
+      function waterfallRow(label, btcAmount, usdAmount, kind) {
+        const tone = kind === "negative" ? "negative" : kind === "positive" ? "positive" : "";
+        return `<tr><td>${label}</td><td class="number ${tone}">${btc(btcAmount)}</td><td class="number ${tone}">${usd(usdAmount)}</td></tr>`;
+      }
+
+      function calculate() {
+        const periodDays = value("periodDays");
+        const btcPrice = value("btcPrice");
+        const settlementRate = value("settlementRate");
+        const investorUnits = value("investorUnits");
+        const fleetUnits = Math.max(value("fleetUnits"), 1);
+        const share = investorUnits / fleetUnits;
+        const grossBtc = value("grossBtc");
+        const uptime = value("uptime") / 100;
+        const activeHours = 24 * uptime;
+        const fleetHashrate = fleetUnits * value("hashratePerUnit");
+        const fleetKw = fleetUnits * value("powerDrawUnit");
+        const fleetMw = fleetKw / 1000;
+        const kwh = fleetKw * activeHours * periodDays;
+        const powerCost = kwh * value("powerRate");
+        const powerTax = powerCost * value("powerTaxRate") / 100;
+        const hostingFee = kwh * value("hostingRate");
+        const insurance = fleetUnits * value("equipmentValue") * value("insuranceRate") / 100 / 12;
+        const custodyFee = value("custodyFee");
+        const compliance = value("auditAnnual") / 12;
+        const maintenance = value("maintenance");
+        const powerHostingSubtotal = powerCost + powerTax + hostingFee;
+        const fixedSubtotal = insurance + custodyFee + compliance + maintenance;
+        const totalOperating = powerHostingSubtotal + fixedSubtotal;
+        const investorGrossBtc = grossBtc * share;
+        const investorGrossUsd = investorGrossBtc * btcPrice;
+        const operatingShareUsd = totalOperating * share;
+        const operatingShareBtc = settlementRate ? operatingShareUsd / settlementRate : 0;
+        const netAfterCostsBtc = investorGrossBtc - operatingShareBtc;
+        const operatorFeeBtc = investorGrossBtc * 0.06;
+        const adminFeeBtc = investorGrossBtc * 0.04;
+        const totalFeeBtc = operatorFeeBtc + adminFeeBtc;
+        const netInvestorBtc = netAfterCostsBtc - totalFeeBtc;
+
+        document.getElementById("fleetHashrate").textContent = `${number.format(fleetHashrate)} TH/s`;
+        document.getElementById("fleetPower").textContent = `${fleetMw.toFixed(2)} MW`;
+        document.getElementById("activeHours").textContent = activeHours.toFixed(2);
+        document.getElementById("totalOperatingCosts").textContent = money.format(totalOperating);
+        document.getElementById("settlementRatePreview").textContent = money.format(settlementRate);
+        document.getElementById("settlementTimePreview").textContent = displayDateTime(document.getElementById("settlementAt").value);
+        document.getElementById("fleetCostBtc").textContent = settlementRate ? (totalOperating / settlementRate).toFixed(6) : "0.000000";
+        document.getElementById("settlementSummary").textContent = `Paid from reserve using ${document.getElementById("settlementRef").value || "no payment reference"}.`;
+        document.getElementById("metricInvestorBtc").textContent = investorGrossBtc.toFixed(6);
+        document.getElementById("metricCostShare").textContent = compactMoney.format(operatingShareUsd);
+        document.getElementById("metricFees").textContent = totalFeeBtc.toFixed(6);
+        document.getElementById("metricNetBtc").textContent = netInvestorBtc.toFixed(6);
+        document.getElementById("netInvestorTotal").textContent = `${btc(netInvestorBtc)} BTC`;
+
+        document.getElementById("costRows").innerHTML = [
+          row("Total kWh consumed", `${fleetMw.toFixed(2)} MW × ${activeHours.toFixed(2)} h × ${periodDays} days`, kwh),
+          row("Power cost pre-tax", `${number.format(kwh)} kWh × $${value("powerRate").toFixed(3)}/kWh`, powerCost),
+          row("Power tax", `${money.format(powerCost)} × ${value("powerTaxRate").toFixed(1)}%`, powerTax),
+          row("Hosting fee", `${number.format(kwh)} kWh × $${value("hostingRate").toFixed(3)}/kWh`, hostingFee),
+          row("Subtotal - power & hosting", "Power cost + tax + hosting", powerHostingSubtotal),
+          row("Insurance", `${fleetUnits} units × ${money.format(value("equipmentValue"))} × ${value("insuranceRate").toFixed(1)}% / 12`, insurance),
+          row("Custody fee", "Monthly fixed fee", custodyFee),
+          row("Compliance / audit", `${money.format(value("auditAnnual"))} annual / 12`, compliance),
+          row("Repairs & maintenance", document.getElementById("warrantyStatus").value, maintenance),
+          row("Subtotal - fixed operating costs", "Insurance + custody + audit + repairs", fixedSubtotal)
+        ].join("");
+
+        document.getElementById("waterfallRows").innerHTML = [
+          waterfallRow("BTC mined - investor pool", investorGrossBtc, investorGrossUsd, "positive"),
+          waterfallRow("Less: operating costs pro-rated - reserve settlement", -operatingShareBtc, -operatingShareUsd, "negative"),
+          waterfallRow("Net BTC after operating costs", netAfterCostsBtc, netAfterCostsBtc * btcPrice, "positive"),
+          waterfallRow("Operator fee - 6% of gross BTC", -operatorFeeBtc, -operatorFeeBtc * btcPrice, "negative"),
+          waterfallRow("Admin agent fee - 4% of gross BTC", -adminFeeBtc, -adminFeeBtc * btcPrice, "negative"),
+          waterfallRow("Total platform fees", -totalFeeBtc, -totalFeeBtc * btcPrice, "negative"),
+          waterfallRow("Net BTC to investor", netInvestorBtc, netInvestorBtc * btcPrice, "positive")
+        ].join("");
+      }
+
+      ids.forEach((id) => document.getElementById(id).addEventListener("input", calculate));
+      ["settlementAt", "settlementRef"].forEach((id) => document.getElementById(id).addEventListener("input", calculate));
+      document.getElementById("warrantyStatus").addEventListener("change", calculate);
+      document.getElementById("resetBtn").addEventListener("click", () => {
+        ids.forEach((id) => {
+          document.getElementById(id).value = defaults[id];
+        });
+        document.getElementById("statementMonth").value = "2026-02";
+        document.getElementById("settlementAt").value = "2026-02-28T16:30";
+        document.getElementById("settlementRef").value = "RES-FEB26-POWER-001";
+        document.getElementById("warrantyStatus").value = "Within warranty";
+        calculate();
+      });
+
+      calculate();
+    </script>
+  </body>
+</html>

@@ -14,7 +14,7 @@
       .workspace {
         display: grid;
         gap: var(--space-md);
-        grid-template-columns: minmax(360px, 0.92fr) minmax(420px, 1.08fr);
+        grid-template-columns: minmax(0, 1fr);
       }
 
       .section-band {
@@ -62,6 +62,60 @@
         border-color: var(--color-brand);
         box-shadow: 0 0 0 3px rgba(35, 87, 137, 0.12);
         outline: 0;
+      }
+
+      input:disabled,
+      input[readonly],
+      select:disabled {
+        background: #eef2f6;
+        color: var(--color-muted);
+        cursor: not-allowed;
+      }
+
+      .segmented {
+        background: var(--color-surface-muted);
+        border: 1px solid var(--color-border);
+        border-radius: var(--radius-sm);
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        overflow: hidden;
+      }
+
+      .segmented label {
+        color: var(--color-text);
+        cursor: pointer;
+        display: grid;
+        min-height: 38px;
+        place-items: center;
+      }
+
+      .segmented input {
+        position: absolute;
+        opacity: 0;
+        pointer-events: none;
+      }
+
+      .segmented label:has(input:checked) {
+        background: var(--color-brand);
+        color: white;
+      }
+
+      .reference-strip {
+        align-items: end;
+        background: var(--color-surface-muted);
+        border: 1px solid var(--color-border);
+        border-radius: var(--radius-sm);
+        display: grid;
+        gap: var(--space-md);
+        grid-template-columns: minmax(0, 1fr) auto;
+        margin-top: 12px;
+        padding: 12px;
+      }
+
+      .reference-strip strong {
+        display: block;
+        font-size: var(--font-size-lg);
+        margin-top: 4px;
       }
 
       .subhead {
@@ -186,7 +240,6 @@
       }
 
       @media (max-width: 1180px) {
-        .workspace,
         .content-grid {
           grid-template-columns: 1fr;
         }
@@ -195,14 +248,14 @@
       @media (max-width: 760px) {
         .form-grid,
         .form-grid.two,
-        .audit-grid,
-        .metric-grid {
+        .audit-grid {
           grid-template-columns: 1fr;
         }
 
         .formula-row,
         .line-total,
-        .waterfall-total {
+        .waterfall-total,
+        .reference-strip {
           grid-template-columns: 1fr;
         }
 
@@ -236,25 +289,6 @@
           </div>
         </header>
 
-        <section class="metric-grid" aria-label="Statement summary">
-          <div class="panel">
-            <div class="metric-label">Investor gross BTC</div>
-            <div class="metric-value" id="metricInvestorBtc">0.166290</div>
-          </div>
-          <div class="panel">
-            <div class="metric-label">Operating cost share</div>
-            <div class="metric-value" id="metricCostShare">$12.15k</div>
-          </div>
-          <div class="panel">
-            <div class="metric-label">Platform fees</div>
-            <div class="metric-value" id="metricFees">0.016629</div>
-          </div>
-          <div class="panel">
-            <div class="metric-label">Net BTC to investor</div>
-            <div class="metric-value" id="metricNetBtc">0.023588</div>
-          </div>
-        </section>
-
         <section class="workspace">
           <div class="section-band">
             <div class="panel">
@@ -276,6 +310,17 @@
                   <input id="btcPrice" type="number" min="0" step="100" value="96400">
                 </div>
                 <div class="field">
+                  <label>Publish schedule</label>
+                  <div class="segmented" role="radiogroup" aria-label="Publish schedule">
+                    <label><input type="radio" name="publishMode" value="now" checked>Publish now</label>
+                    <label><input type="radio" name="publishMode" value="scheduled">Schedule</label>
+                  </div>
+                </div>
+                <div class="field">
+                  <label for="publishAt">Scheduled publish time</label>
+                  <input id="publishAt" type="datetime-local" value="2026-03-01T09:00" disabled>
+                </div>
+                <div class="field">
                   <label for="investorUnits">Investor units</label>
                   <input id="investorUnits" type="number" min="0" step="1" value="50">
                 </div>
@@ -288,25 +333,32 @@
                   <input id="grossBtc" type="number" min="0" step="0.000001" value="2.993226">
                 </div>
               </div>
+              <div class="reference-strip">
+                <div>
+                  <span class="muted">External BTC/USD reference · CoinGecko spot index · 2026-03-01 00:00 UTC</span>
+                  <strong id="externalBtcPrice">$96,420</strong>
+                </div>
+                <button class="btn secondary" type="button" id="useExternalPrice">Use reference price</button>
+              </div>
             </div>
 
             <div class="panel">
               <div class="subhead">
                 <h2>Asset performance</h2>
-                <span class="pill">Mining basis</span>
+                <span class="pill">From F2Pool</span>
               </div>
               <div class="form-grid">
                 <div class="field">
                   <label for="hashratePerUnit">Hashrate per unit TH/s</label>
-                  <input id="hashratePerUnit" type="number" min="0" step="1" value="240">
+                  <input id="hashratePerUnit" type="number" min="0" step="1" value="240" disabled>
                 </div>
                 <div class="field">
                   <label for="powerDrawUnit">Power draw per unit kW</label>
-                  <input id="powerDrawUnit" type="number" min="0" step="0.01" value="3.89">
+                  <input id="powerDrawUnit" type="number" min="0" step="0.01" value="3.89" disabled>
                 </div>
                 <div class="field">
                   <label for="uptime">Server uptime %</label>
-                  <input id="uptime" type="number" min="0" max="100" step="0.1" value="99">
+                  <input id="uptime" type="number" min="0" max="100" step="0.1" value="99" disabled>
                 </div>
               </div>
               <div class="audit-grid" style="margin-top: 16px;">
@@ -517,16 +569,11 @@
         maintenance: 0
       };
 
+      const externalReferencePrice = 96420;
       const ids = Object.keys(defaults);
       const money = new Intl.NumberFormat("en-US", {
         style: "currency",
         currency: "USD",
-        maximumFractionDigits: 2
-      });
-      const compactMoney = new Intl.NumberFormat("en-US", {
-        style: "currency",
-        currency: "USD",
-        notation: "compact",
         maximumFractionDigits: 2
       });
       const number = new Intl.NumberFormat("en-US", { maximumFractionDigits: 2 });
@@ -601,10 +648,6 @@
         document.getElementById("settlementTimePreview").textContent = displayDateTime(document.getElementById("settlementAt").value);
         document.getElementById("fleetCostBtc").textContent = settlementRate ? (totalOperating / settlementRate).toFixed(6) : "0.000000";
         document.getElementById("settlementSummary").textContent = `Paid from reserve using ${document.getElementById("settlementRef").value || "no payment reference"}.`;
-        document.getElementById("metricInvestorBtc").textContent = investorGrossBtc.toFixed(6);
-        document.getElementById("metricCostShare").textContent = compactMoney.format(operatingShareUsd);
-        document.getElementById("metricFees").textContent = totalFeeBtc.toFixed(6);
-        document.getElementById("metricNetBtc").textContent = netInvestorBtc.toFixed(6);
         document.getElementById("netInvestorTotal").textContent = `${btc(netInvestorBtc)} BTC`;
 
         document.getElementById("costRows").innerHTML = [
@@ -631,20 +674,37 @@
         ].join("");
       }
 
+      function syncPublishSchedule() {
+        const mode = document.querySelector('input[name="publishMode"]:checked').value;
+        document.getElementById("publishAt").disabled = mode !== "scheduled";
+      }
+
       ids.forEach((id) => document.getElementById(id).addEventListener("input", calculate));
       ["settlementAt", "settlementRef"].forEach((id) => document.getElementById(id).addEventListener("input", calculate));
+      document.getElementById("externalBtcPrice").textContent = money.format(externalReferencePrice);
+      document.getElementById("useExternalPrice").addEventListener("click", () => {
+        document.getElementById("btcPrice").value = externalReferencePrice;
+        calculate();
+      });
+      document.querySelectorAll('input[name="publishMode"]').forEach((input) => {
+        input.addEventListener("change", syncPublishSchedule);
+      });
       document.getElementById("warrantyStatus").addEventListener("change", calculate);
       document.getElementById("resetBtn").addEventListener("click", () => {
         ids.forEach((id) => {
           document.getElementById(id).value = defaults[id];
         });
         document.getElementById("statementMonth").value = "2026-02";
+        document.querySelector('input[name="publishMode"][value="now"]').checked = true;
+        document.getElementById("publishAt").value = "2026-03-01T09:00";
         document.getElementById("settlementAt").value = "2026-02-28T16:30";
         document.getElementById("settlementRef").value = "RES-FEB26-POWER-001";
         document.getElementById("warrantyStatus").value = "Within warranty";
+        syncPublishSchedule();
         calculate();
       });
 
+      syncPublishSchedule();
       calculate();
     </script>
   </body>

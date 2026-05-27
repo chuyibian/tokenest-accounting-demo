@@ -239,6 +239,172 @@
         margin-top: 6px;
       }
 
+      .modal-backdrop {
+        align-items: center;
+        background: rgba(23, 32, 42, 0.48);
+        display: none;
+        inset: 0;
+        justify-content: center;
+        padding: var(--space-lg);
+        position: fixed;
+        z-index: 10;
+      }
+
+      .modal-backdrop.open {
+        display: flex;
+      }
+
+      .modal {
+        background: var(--color-surface);
+        border-radius: var(--radius-md);
+        box-shadow: 0 24px 80px rgba(23, 32, 42, 0.24);
+        max-height: calc(100vh - 48px);
+        overflow: auto;
+        width: min(1100px, 100%);
+      }
+
+      .modal.compact {
+        width: min(420px, 100%);
+      }
+
+      .modal-header {
+        align-items: center;
+        border-bottom: 1px solid var(--color-border);
+        display: flex;
+        gap: var(--space-md);
+        justify-content: space-between;
+        padding: var(--space-md);
+        position: sticky;
+        top: 0;
+        background: var(--color-surface);
+        z-index: 1;
+      }
+
+      .modal-header h2 {
+        margin-bottom: 0;
+      }
+
+      .modal-body {
+        padding: var(--space-md);
+      }
+
+      .summary-strip {
+        display: grid;
+        gap: 12px;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        margin-bottom: var(--space-md);
+      }
+
+      .summary-item {
+        background: var(--color-surface-muted);
+        border: 1px solid var(--color-border);
+        border-radius: var(--radius-sm);
+        padding: 12px;
+      }
+
+      .summary-item strong {
+        display: block;
+        margin-top: 4px;
+      }
+
+      .pdf-page {
+        background: white;
+        border: 1px solid var(--color-border);
+        color: #1d2733;
+        margin: 0 auto;
+        max-width: 860px;
+        min-height: 1100px;
+        padding: 38px 44px;
+      }
+
+      .pdf-topline {
+        align-items: start;
+        border-bottom: 1px solid #cfd6df;
+        display: flex;
+        justify-content: space-between;
+        gap: var(--space-md);
+        padding-bottom: 12px;
+      }
+
+      .pdf-brand strong {
+        display: block;
+        font-size: 18px;
+      }
+
+      .pdf-confidential {
+        color: #667085;
+        font-size: 12px;
+        text-align: right;
+      }
+
+      .pdf-title {
+        align-items: start;
+        display: grid;
+        gap: var(--space-md);
+        grid-template-columns: minmax(0, 1fr) auto;
+        margin: 24px 0;
+      }
+
+      .pdf-title h2 {
+        font-size: 24px;
+        letter-spacing: 0;
+        margin-bottom: 6px;
+      }
+
+      .pdf-meta {
+        color: #344054;
+        font-size: 13px;
+        line-height: 1.7;
+        text-align: right;
+      }
+
+      .pdf-section {
+        margin-top: 22px;
+      }
+
+      .pdf-section h3 {
+        border-bottom: 1px solid #cfd6df;
+        font-size: 14px;
+        margin-bottom: 8px;
+        padding-bottom: 7px;
+        text-transform: uppercase;
+      }
+
+      .pdf-grid {
+        display: grid;
+        gap: var(--space-md);
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      .pdf-table {
+        border-collapse: collapse;
+        font-size: 12px;
+        width: 100%;
+      }
+
+      .pdf-table th,
+      .pdf-table td {
+        border-bottom: 1px solid #dde3ea;
+        padding: 8px 6px;
+      }
+
+      .pdf-table th {
+        color: #667085;
+        font-weight: 700;
+        text-transform: uppercase;
+      }
+
+      .pdf-table .right {
+        text-align: right;
+        white-space: nowrap;
+      }
+
+      .pdf-note {
+        color: #667085;
+        font-size: 12px;
+        margin-top: 18px;
+      }
+
       @media (max-width: 1180px) {
         .content-grid {
           grid-template-columns: 1fr;
@@ -255,8 +421,16 @@
         .formula-row,
         .line-total,
         .waterfall-total,
-        .reference-strip {
+        .reference-strip,
+        .summary-strip,
+        .pdf-title,
+        .pdf-grid {
           grid-template-columns: 1fr;
+        }
+
+        .pdf-meta,
+        .pdf-confidential {
+          text-align: left;
         }
 
         .number {
@@ -273,8 +447,6 @@
           <span>Finance operations</span>
         </div>
         <a class="active" href="#">Monthly statement builder</a>
-        <a href="../codex-ops-dashboard/index.html">Ops dashboard</a>
-        <a href="../../docs/design-system.md">Design system</a>
       </aside>
 
       <main class="main">
@@ -285,7 +457,8 @@
           </div>
           <div class="actions">
             <button class="btn secondary" type="button" id="resetBtn">Reset sample</button>
-            <button class="btn primary" type="button">Generate statement</button>
+            <button class="btn secondary" type="button" id="saveDraftBtn">Save draft</button>
+            <button class="btn primary" type="button" id="generateStatementBtn">Generate statement</button>
           </div>
         </header>
 
@@ -297,6 +470,22 @@
                 <span class="pill">Accounting input</span>
               </div>
               <div class="form-grid">
+                <div class="field">
+                  <label for="investorSelect">Investor</label>
+                  <select id="investorSelect">
+                    <option value="John D. XX" data-account="TKD-INV-00047" data-wallet="bc1qxy2...x0w1h">John D. XX</option>
+                    <option value="Avery Chen" data-account="TKD-INV-00082" data-wallet="bc1qav3...m9k2p">Avery Chen</option>
+                    <option value="Northstar Digital Fund" data-account="TKD-INV-00118" data-wallet="bc1qns8...v4r7z">Northstar Digital Fund</option>
+                  </select>
+                </div>
+                <div class="field">
+                  <label for="projectSelect">Investment project</label>
+                  <select id="projectSelect">
+                    <option value="S21 Pro Feb 2026 Pool" data-units="50" data-fleet="900">S21 Pro Feb 2026 Pool</option>
+                    <option value="S21 Pro March Expansion" data-units="24" data-fleet="600">S21 Pro March Expansion</option>
+                    <option value="Hydro Mining Pilot" data-units="12" data-fleet="320">Hydro Mining Pilot</option>
+                  </select>
+                </div>
                 <div class="field">
                   <label for="statementMonth">Statement month</label>
                   <input id="statementMonth" type="month" value="2026-02">
@@ -548,6 +737,152 @@
       </main>
     </div>
 
+    <div class="modal-backdrop" id="draftModal" role="dialog" aria-modal="true" aria-labelledby="draftTitle">
+      <div class="modal compact">
+        <div class="modal-header">
+          <h2 id="draftTitle">Draft saved</h2>
+          <button class="btn secondary" type="button" data-close-modal>Close</button>
+        </div>
+        <div class="modal-body">
+          <p class="muted">Statement saved as draft. Accounting can return to this month, investor, and project before publishing.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="modal-backdrop" id="previewModal" role="dialog" aria-modal="true" aria-labelledby="previewTitle">
+      <div class="modal">
+        <div class="modal-header">
+          <div>
+            <h2 id="previewTitle">PDF preview</h2>
+            <p class="muted" style="margin-bottom: 0;">Generated statement preview before publish.</p>
+          </div>
+          <div class="actions">
+            <button class="btn secondary" type="button" data-close-modal>Close</button>
+            <button class="btn primary" type="button">Publish statement</button>
+          </div>
+        </div>
+        <div class="modal-body">
+          <h2>Preview summary</h2>
+          <div class="summary-strip" aria-label="PDF preview summary">
+            <div class="summary-item">
+              <span class="muted">Project</span>
+              <strong id="previewProject">S21 Pro Feb 2026 Pool</strong>
+            </div>
+            <div class="summary-item">
+              <span class="muted">Report month</span>
+              <strong id="previewMonth">2026-02</strong>
+            </div>
+            <div class="summary-item">
+              <span class="muted">Investor</span>
+              <strong id="previewInvestor">John D. XX</strong>
+            </div>
+            <div class="summary-item">
+              <span class="muted">Publish schedule</span>
+              <strong id="previewSchedule">Publish now</strong>
+            </div>
+          </div>
+
+          <article class="pdf-page" aria-label="Investor monthly mining statement PDF preview">
+            <div class="pdf-topline">
+              <div class="pdf-brand">
+                <strong>TKD Group</strong>
+                <span class="muted">tkdgroup.sg</span>
+              </div>
+              <div class="pdf-confidential">
+                138 Market Street, #05-01 & #05-02, CapitaGreen, Singapore 048946<br>
+                Private & Confidential
+              </div>
+            </div>
+
+            <div class="pdf-title">
+              <div>
+                <h2>MONTHLY MINING STATEMENT</h2>
+                <p class="muted" id="pdfProjectLine">S21 Pro Feb 2026 Pool</p>
+              </div>
+              <div class="pdf-meta">
+                Statement No. <strong id="pdfStatementNo">TKD-2026-02-0047</strong><br>
+                Period <strong id="pdfPeriod">01 Feb - 28 Feb 2026</strong><br>
+                Issued <strong id="pdfIssued">01 Mar 2026</strong>
+              </div>
+            </div>
+
+            <table class="pdf-table">
+              <tbody>
+                <tr>
+                  <th>Company name</th>
+                  <td id="pdfInvestorName">John D. XX</td>
+                  <th>Account ID</th>
+                  <td id="pdfAccountId">TKD-INV-00047</td>
+                </tr>
+                <tr>
+                  <th>Project</th>
+                  <td id="pdfProjectName">S21 Pro Feb 2026 Pool</td>
+                  <th>BTC wallet</th>
+                  <td id="pdfWallet">bc1qxy2...x0w1h</td>
+                </tr>
+              </tbody>
+            </table>
+
+            <section class="pdf-section">
+              <h3>1. Asset & mining performance</h3>
+              <div class="pdf-grid">
+                <table class="pdf-table">
+                  <tbody>
+                    <tr><td>Model</td><td class="right">Antminer S21 Pro</td></tr>
+                    <tr><td>Investor units owned</td><td class="right" id="pdfInvestorUnits">50</td></tr>
+                    <tr><td>Hashrate per unit</td><td class="right" id="pdfHashrateUnit">240 TH/s</td></tr>
+                    <tr><td>Total fleet hashrate</td><td class="right" id="pdfFleetHashrate">216,000 TH/s</td></tr>
+                    <tr><td>Power draw per unit</td><td class="right" id="pdfPowerUnit">3.89 kW</td></tr>
+                  </tbody>
+                </table>
+                <table class="pdf-table">
+                  <tbody>
+                    <tr><td>Period days</td><td class="right" id="pdfDays">28</td></tr>
+                    <tr><td>Server uptime</td><td class="right" id="pdfUptime">99.0%</td></tr>
+                    <tr><td>Total BTC mined gross</td><td class="right" id="pdfGrossBtc">2.993226 BTC</td></tr>
+                    <tr><td>Total BTC mined investor pool</td><td class="right" id="pdfInvestorBtc">0.166290 BTC</td></tr>
+                    <tr><td>Avg BTC price for reporting</td><td class="right" id="pdfBtcPrice">$96,400</td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </section>
+
+            <section class="pdf-section">
+              <h3>2. Operating costs</h3>
+              <table class="pdf-table">
+                <thead>
+                  <tr>
+                    <th>Cost item</th>
+                    <th>Basis</th>
+                    <th class="right">USD</th>
+                  </tr>
+                </thead>
+                <tbody id="pdfCostRows"></tbody>
+              </table>
+            </section>
+
+            <section class="pdf-section">
+              <h3>3. Earnings & fee waterfall</h3>
+              <table class="pdf-table">
+                <thead>
+                  <tr>
+                    <th>Line item</th>
+                    <th class="right">BTC</th>
+                    <th class="right">USD est.</th>
+                  </tr>
+                </thead>
+                <tbody id="pdfWaterfallRows"></tbody>
+              </table>
+            </section>
+
+            <p class="pdf-note">
+              USD estimates use the reporting BTC price. Operating cost BTC conversion uses the fixed reserve settlement rate and settlement time captured by accounting.
+            </p>
+          </article>
+        </div>
+      </div>
+    </div>
+
     <script>
       const defaults = {
         periodDays: 28,
@@ -571,6 +906,7 @@
 
       const externalReferencePrice = 96420;
       const ids = Object.keys(defaults);
+      let latestData = {};
       const money = new Intl.NumberFormat("en-US", {
         style: "currency",
         currency: "USD",
@@ -606,6 +942,41 @@
         return `<tr><td>${label}</td><td class="number ${tone}">${btc(btcAmount)}</td><td class="number ${tone}">${usd(usdAmount)}</td></tr>`;
       }
 
+      function pdfMoney(value) {
+        return money.format(value);
+      }
+
+      function selectedOption(id) {
+        const select = document.getElementById(id);
+        return select.options[select.selectedIndex];
+      }
+
+      function scheduleLabel() {
+        const mode = document.querySelector('input[name="publishMode"]:checked').value;
+        return mode === "scheduled" ? displayDateTime(document.getElementById("publishAt").value) : "Publish now";
+      }
+
+      function periodLabel(monthValue, days) {
+        if (!monthValue) return `${days} days`;
+        const [year, month] = monthValue.split("-").map(Number);
+        const date = new Date(year, month - 1, 1);
+        const monthName = date.toLocaleString("en-US", { month: "short" });
+        return `01 ${monthName} - ${String(days).padStart(2, "0")} ${monthName} ${year}`;
+      }
+
+      function issuedLabel() {
+        const mode = document.querySelector('input[name="publishMode"]:checked').value;
+        if (mode === "scheduled" && document.getElementById("publishAt").value) {
+          return displayDateTime(document.getElementById("publishAt").value);
+        }
+        return "Preview only";
+      }
+
+      function statementNumber(monthValue) {
+        const suffix = monthValue ? monthValue.replace("-", "-") : "DRAFT";
+        return `TKD-${suffix}-DRAFT`;
+      }
+
       function calculate() {
         const periodDays = value("periodDays");
         const btcPrice = value("btcPrice");
@@ -639,6 +1010,43 @@
         const adminFeeBtc = investorGrossBtc * 0.04;
         const totalFeeBtc = operatorFeeBtc + adminFeeBtc;
         const netInvestorBtc = netAfterCostsBtc - totalFeeBtc;
+        const costRowsData = [
+          ["Total kWh consumed", `${fleetMw.toFixed(2)} MW × ${activeHours.toFixed(2)} h × ${periodDays} days`, kwh],
+          ["Power cost pre-tax", `${number.format(kwh)} kWh × $${value("powerRate").toFixed(3)}/kWh`, powerCost],
+          ["Power tax", `${money.format(powerCost)} × ${value("powerTaxRate").toFixed(1)}%`, powerTax],
+          ["Hosting fee", `${number.format(kwh)} kWh × $${value("hostingRate").toFixed(3)}/kWh`, hostingFee],
+          ["Subtotal - power & hosting", "Power cost + tax + hosting", powerHostingSubtotal],
+          ["Insurance", `${fleetUnits} units × ${money.format(value("equipmentValue"))} × ${value("insuranceRate").toFixed(1)}% / 12`, insurance],
+          ["Custody fee", "Monthly fixed fee", custodyFee],
+          ["Compliance / audit", `${money.format(value("auditAnnual"))} annual / 12`, compliance],
+          ["Repairs & maintenance", document.getElementById("warrantyStatus").value, maintenance],
+          ["Subtotal - fixed operating costs", "Insurance + custody + audit + repairs", fixedSubtotal],
+          ["Total operating costs", "Power & hosting + fixed operating costs", totalOperating]
+        ];
+        const waterfallRowsData = [
+          ["BTC mined - investor pool", investorGrossBtc, investorGrossUsd, "positive"],
+          ["Less: operating costs pro-rated - reserve settlement", -operatingShareBtc, -operatingShareUsd, "negative"],
+          ["Net BTC after operating costs", netAfterCostsBtc, netAfterCostsBtc * btcPrice, "positive"],
+          ["Operator fee - 6% of gross BTC", -operatorFeeBtc, -operatorFeeBtc * btcPrice, "negative"],
+          ["Admin agent fee - 4% of gross BTC", -adminFeeBtc, -adminFeeBtc * btcPrice, "negative"],
+          ["Total platform fees", -totalFeeBtc, -totalFeeBtc * btcPrice, "negative"],
+          ["Net BTC to investor", netInvestorBtc, netInvestorBtc * btcPrice, "positive"]
+        ];
+        latestData = {
+          periodDays,
+          btcPrice,
+          settlementRate,
+          investorUnits,
+          fleetUnits,
+          grossBtc,
+          fleetHashrate,
+          fleetMw,
+          uptime,
+          investorGrossBtc,
+          totalOperating,
+          costRowsData,
+          waterfallRowsData
+        };
 
         document.getElementById("fleetHashrate").textContent = `${number.format(fleetHashrate)} TH/s`;
         document.getElementById("fleetPower").textContent = `${fleetMw.toFixed(2)} MW`;
@@ -650,28 +1058,14 @@
         document.getElementById("settlementSummary").textContent = `Paid from reserve using ${document.getElementById("settlementRef").value || "no payment reference"}.`;
         document.getElementById("netInvestorTotal").textContent = `${btc(netInvestorBtc)} BTC`;
 
-        document.getElementById("costRows").innerHTML = [
-          row("Total kWh consumed", `${fleetMw.toFixed(2)} MW × ${activeHours.toFixed(2)} h × ${periodDays} days`, kwh),
-          row("Power cost pre-tax", `${number.format(kwh)} kWh × $${value("powerRate").toFixed(3)}/kWh`, powerCost),
-          row("Power tax", `${money.format(powerCost)} × ${value("powerTaxRate").toFixed(1)}%`, powerTax),
-          row("Hosting fee", `${number.format(kwh)} kWh × $${value("hostingRate").toFixed(3)}/kWh`, hostingFee),
-          row("Subtotal - power & hosting", "Power cost + tax + hosting", powerHostingSubtotal),
-          row("Insurance", `${fleetUnits} units × ${money.format(value("equipmentValue"))} × ${value("insuranceRate").toFixed(1)}% / 12`, insurance),
-          row("Custody fee", "Monthly fixed fee", custodyFee),
-          row("Compliance / audit", `${money.format(value("auditAnnual"))} annual / 12`, compliance),
-          row("Repairs & maintenance", document.getElementById("warrantyStatus").value, maintenance),
-          row("Subtotal - fixed operating costs", "Insurance + custody + audit + repairs", fixedSubtotal)
-        ].join("");
+        document.getElementById("costRows").innerHTML = costRowsData
+          .filter(([label]) => label !== "Total operating costs")
+          .map(([label, basis, amount]) => row(label, basis, amount))
+          .join("");
 
-        document.getElementById("waterfallRows").innerHTML = [
-          waterfallRow("BTC mined - investor pool", investorGrossBtc, investorGrossUsd, "positive"),
-          waterfallRow("Less: operating costs pro-rated - reserve settlement", -operatingShareBtc, -operatingShareUsd, "negative"),
-          waterfallRow("Net BTC after operating costs", netAfterCostsBtc, netAfterCostsBtc * btcPrice, "positive"),
-          waterfallRow("Operator fee - 6% of gross BTC", -operatorFeeBtc, -operatorFeeBtc * btcPrice, "negative"),
-          waterfallRow("Admin agent fee - 4% of gross BTC", -adminFeeBtc, -adminFeeBtc * btcPrice, "negative"),
-          waterfallRow("Total platform fees", -totalFeeBtc, -totalFeeBtc * btcPrice, "negative"),
-          waterfallRow("Net BTC to investor", netInvestorBtc, netInvestorBtc * btcPrice, "positive")
-        ].join("");
+        document.getElementById("waterfallRows").innerHTML = waterfallRowsData
+          .map(([label, btcAmount, usdAmount, kind]) => waterfallRow(label, btcAmount, usdAmount, kind))
+          .join("");
       }
 
       function syncPublishSchedule() {
@@ -679,21 +1073,105 @@
         document.getElementById("publishAt").disabled = mode !== "scheduled";
       }
 
+      function syncProjectDefaults() {
+        const project = selectedOption("projectSelect");
+        document.getElementById("investorUnits").value = project.dataset.units || document.getElementById("investorUnits").value;
+        document.getElementById("fleetUnits").value = project.dataset.fleet || document.getElementById("fleetUnits").value;
+        calculate();
+      }
+
+      function openModal(id) {
+        document.getElementById(id).classList.add("open");
+      }
+
+      function closeModals() {
+        document.querySelectorAll(".modal-backdrop").forEach((modal) => modal.classList.remove("open"));
+      }
+
+      function pdfCostRow(label, basis, amount) {
+        return `<tr><td>${label}</td><td>${basis}</td><td class="right">${pdfMoney(amount)}</td></tr>`;
+      }
+
+      function pdfWaterfallRow(label, btcAmount, usdAmount) {
+        return `<tr><td>${label}</td><td class="right">${btc(btcAmount)}</td><td class="right">${usd(usdAmount)}</td></tr>`;
+      }
+
+      function fillPreview() {
+        calculate();
+        const investor = selectedOption("investorSelect");
+        const project = selectedOption("projectSelect");
+        const month = document.getElementById("statementMonth").value;
+        const schedule = scheduleLabel();
+
+        document.getElementById("previewProject").textContent = project.value;
+        document.getElementById("previewMonth").textContent = month || "Not set";
+        document.getElementById("previewInvestor").textContent = investor.value;
+        document.getElementById("previewSchedule").textContent = schedule;
+        document.getElementById("pdfProjectLine").textContent = project.value;
+        document.getElementById("pdfProjectName").textContent = project.value;
+        document.getElementById("pdfInvestorName").textContent = investor.value;
+        document.getElementById("pdfAccountId").textContent = investor.dataset.account;
+        document.getElementById("pdfWallet").textContent = investor.dataset.wallet;
+        document.getElementById("pdfStatementNo").textContent = statementNumber(month);
+        document.getElementById("pdfPeriod").textContent = periodLabel(month, latestData.periodDays);
+        document.getElementById("pdfIssued").textContent = issuedLabel();
+        document.getElementById("pdfInvestorUnits").textContent = latestData.investorUnits;
+        document.getElementById("pdfHashrateUnit").textContent = `${value("hashratePerUnit")} TH/s`;
+        document.getElementById("pdfFleetHashrate").textContent = `${number.format(latestData.fleetHashrate)} TH/s`;
+        document.getElementById("pdfPowerUnit").textContent = `${value("powerDrawUnit").toFixed(2)} kW`;
+        document.getElementById("pdfDays").textContent = latestData.periodDays;
+        document.getElementById("pdfUptime").textContent = `${value("uptime").toFixed(1)}%`;
+        document.getElementById("pdfGrossBtc").textContent = `${latestData.grossBtc.toFixed(6)} BTC`;
+        document.getElementById("pdfInvestorBtc").textContent = `${latestData.investorGrossBtc.toFixed(6)} BTC`;
+        document.getElementById("pdfBtcPrice").textContent = pdfMoney(latestData.btcPrice);
+        document.getElementById("pdfCostRows").innerHTML = latestData.costRowsData
+          .map(([label, basis, amount]) => pdfCostRow(label, basis, amount))
+          .join("");
+        document.getElementById("pdfWaterfallRows").innerHTML = latestData.waterfallRowsData
+          .map(([label, btcAmount, usdAmount]) => pdfWaterfallRow(label, btcAmount, usdAmount))
+          .join("");
+      }
+
       ids.forEach((id) => document.getElementById(id).addEventListener("input", calculate));
       ["settlementAt", "settlementRef"].forEach((id) => document.getElementById(id).addEventListener("input", calculate));
+      ["investorSelect", "statementMonth", "publishAt"].forEach((id) => {
+        document.getElementById(id).addEventListener("input", calculate);
+      });
+      document.getElementById("projectSelect").addEventListener("change", syncProjectDefaults);
       document.getElementById("externalBtcPrice").textContent = money.format(externalReferencePrice);
       document.getElementById("useExternalPrice").addEventListener("click", () => {
         document.getElementById("btcPrice").value = externalReferencePrice;
         calculate();
       });
       document.querySelectorAll('input[name="publishMode"]').forEach((input) => {
-        input.addEventListener("change", syncPublishSchedule);
+        input.addEventListener("change", () => {
+          syncPublishSchedule();
+          calculate();
+        });
       });
       document.getElementById("warrantyStatus").addEventListener("change", calculate);
+      document.getElementById("saveDraftBtn").addEventListener("click", () => openModal("draftModal"));
+      document.getElementById("generateStatementBtn").addEventListener("click", () => {
+        fillPreview();
+        openModal("previewModal");
+      });
+      document.querySelectorAll("[data-close-modal]").forEach((button) => {
+        button.addEventListener("click", closeModals);
+      });
+      document.querySelectorAll(".modal-backdrop").forEach((modal) => {
+        modal.addEventListener("click", (event) => {
+          if (event.target === modal) closeModals();
+        });
+      });
+      document.addEventListener("keydown", (event) => {
+        if (event.key === "Escape") closeModals();
+      });
       document.getElementById("resetBtn").addEventListener("click", () => {
         ids.forEach((id) => {
           document.getElementById(id).value = defaults[id];
         });
+        document.getElementById("investorSelect").selectedIndex = 0;
+        document.getElementById("projectSelect").selectedIndex = 0;
         document.getElementById("statementMonth").value = "2026-02";
         document.querySelector('input[name="publishMode"][value="now"]').checked = true;
         document.getElementById("publishAt").value = "2026-03-01T09:00";

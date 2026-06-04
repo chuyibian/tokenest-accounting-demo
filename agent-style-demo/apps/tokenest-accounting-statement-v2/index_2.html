@@ -1,0 +1,1130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tokenest · TKD Statement Automation v2</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Newsreader:opsz,wght@6..72,400;6..72,500;6..72,600&family=IBM+Plex+Mono:wght@400;500;600&display=swap');
+
+  :root{
+    --bg:#f6f5f1;
+    --panel:#ffffff;
+    --panel-2:#f3f2ee;
+    --line:#e4e2da;
+    --line-soft:#eeece6;
+    --ink:#16170f;
+    --ink-dim:#5c5e52;
+    --ink-faint:#8f9184;
+    --accent:#1a1c12;
+    --yellow:#ff4c4c;
+    --yellow-deep:#e63b3b;
+    --green:#1f8a4c;
+    --red:#c8362e;
+    --blue:#2f6fd6;
+    --gold:#a8741a;
+    --radius:14px;
+    --mono:'IBM Plex Mono',monospace;
+    --sans:-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;
+    --serif:'Newsreader',Georgia,serif;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{background:var(--bg);color:var(--ink);font-family:var(--sans);font-size:14px;line-height:1.5;-webkit-font-smoothing:antialiased}
+  .app{display:flex;min-height:100vh}
+
+  /* Sidebar */
+  .side{width:252px;flex:0 0 252px;background:var(--panel);border-right:1px solid var(--line);padding:22px 16px;position:sticky;top:0;height:100vh;display:flex;flex-direction:column;gap:4px}
+  .brand{display:flex;align-items:center;gap:10px;margin-bottom:28px;padding:0 6px}
+  .brand .logo{width:30px;height:30px;border-radius:9px;background:var(--yellow);display:flex;align-items:center;justify-content:center;font-weight:700;color:#fff;font-size:14px}
+  .brand b{font-size:18px;letter-spacing:-.3px;font-weight:600}
+  .brand span{display:block;font-size:9.5px;color:var(--ink-faint);letter-spacing:1.5px;text-transform:uppercase;margin-top:0}
+  .nav-label{font-size:10px;letter-spacing:1px;text-transform:uppercase;color:var(--ink-faint);margin:16px 8px 6px;font-weight:600}
+  .step{display:flex;align-items:center;gap:11px;padding:9px 11px;border-radius:9px;color:var(--ink-dim);cursor:pointer;border:1px solid transparent;transition:.13s;font-size:13.5px}
+  .step:hover{background:var(--panel-2)}
+  .step.active{background:var(--ink);border-color:var(--ink);color:#fff}
+  .step.done{color:var(--ink)}
+  .step .num{width:21px;height:21px;flex:0 0 21px;border-radius:6px;border:1px solid var(--line);display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:10.5px;color:var(--ink-faint)}
+  .step.active .num{border-color:var(--yellow);background:var(--yellow);color:#fff}
+  .step.done .num{background:var(--ink);border-color:var(--ink);color:var(--yellow)}
+  .side-foot{margin-top:auto;font-size:11px;color:var(--ink-faint);border-top:1px solid var(--line-soft);padding-top:14px;padding-left:6px}
+  .side-foot code{font-family:var(--mono);color:var(--ink-dim)}
+  .side-foot b{color:var(--ink-dim)}
+
+  /* Main */
+  .main{flex:1;min-width:0;display:flex;flex-direction:column}
+  .topbar{height:60px;border-bottom:1px solid var(--line);display:flex;align-items:center;padding:0 30px;gap:14px;background:rgba(246,245,241,.85);backdrop-filter:blur(8px);position:sticky;top:0;z-index:20}
+  .topbar .ctx{font-size:12.5px;color:var(--ink-dim)}
+  .topbar .ctx b{color:var(--ink);font-weight:600}
+  .pill{font-family:var(--mono);font-size:11px;padding:4px 10px;border-radius:7px;border:1px solid var(--line);color:var(--ink-dim);background:var(--panel)}
+  .pill.live{border-color:var(--yellow);color:#fff;background:var(--yellow)}
+  .pill.gold{border-color:var(--gold);color:var(--gold);background:rgba(168,116,26,.08)}
+  .spacer{flex:1}
+  .who{font-size:12.5px;color:var(--ink-dim);display:flex;align-items:center;gap:8px}
+  .who .av{width:27px;height:27px;border-radius:8px;background:var(--ink);display:flex;align-items:center;justify-content:center;font-size:11px;color:var(--yellow);font-weight:600}
+
+  .stage{padding:34px 38px 90px;max-width:1180px;width:100%;margin:0 auto}
+  .h1{font-family:var(--serif);font-size:34px;font-weight:500;letter-spacing:-.5px;line-height:1.1}
+  .sub{color:var(--ink-dim);margin-top:9px;font-size:14px;max-width:730px;line-height:1.55}
+  .stepline{display:flex;align-items:center;gap:8px;margin-top:12px;font-size:10.5px;color:var(--ink-faint);font-family:var(--mono);letter-spacing:.5px}
+
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:24px 26px;margin-top:22px;box-shadow:0 1px 2px rgba(20,23,15,.03)}
+  .card h3{font-size:15px;font-weight:600;display:flex;align-items:center;gap:9px;margin-bottom:3px;letter-spacing:-.2px}
+  .card h3 .dot{width:7px;height:7px;border-radius:50%;background:var(--yellow-deep)}
+  .card .hint{font-size:12.5px;color:var(--ink-faint);margin-bottom:20px}
+
+  .grid{display:grid;gap:16px}
+  .g2{grid-template-columns:1fr 1fr}
+  .g3{grid-template-columns:1fr 1fr 1fr}
+  .g4{grid-template-columns:1fr 1fr 1fr 1fr}
+  label.fl{display:block;font-size:10.5px;letter-spacing:.5px;text-transform:uppercase;color:var(--ink-faint);margin-bottom:6px;font-weight:600}
+  .ctrl,select,input{width:100%;background:var(--panel);border:1px solid var(--line);color:var(--ink);border-radius:9px;padding:10px 12px;font-family:var(--sans);font-size:13.5px;outline:none;transition:.13s}
+  .ctrl:focus,select:focus,input:focus{border-color:var(--ink);box-shadow:0 0 0 3px rgba(255,76,76,.25)}
+  input[readonly]{background:var(--panel-2);color:var(--ink-dim)}
+  input.mono{font-family:var(--mono);}
+  select{appearance:none;background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%238f9184' stroke-width='2'><path d='M6 9l6 6 6-6'/></svg>");background-repeat:no-repeat;background-position:right 12px center}
+  input[type=range]{-webkit-appearance:none;height:6px;background:var(--line);border-radius:3px;border:none;padding:0;box-shadow:none}
+  input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:18px;height:18px;border-radius:50%;background:var(--yellow);cursor:pointer;border:2px solid #fff;box-shadow:0 1px 3px rgba(0,0,0,.2)}
+
+  .btn{display:inline-flex;align-items:center;gap:8px;background:var(--ink);color:#fff;border:none;border-radius:9px;padding:11px 22px;font-size:13.5px;font-weight:600;cursor:pointer;transition:.13s;font-family:var(--sans)}
+  .btn:hover{background:#000;transform:translateY(-1px)}
+  .btn.ghost{background:var(--panel);border:1px solid var(--line);color:var(--ink-dim)}
+  .btn.ghost:hover{border-color:var(--ink);color:var(--ink);transform:none}
+  .btn.yellow{background:var(--yellow);color:#fff}
+  .btn.yellow:hover{background:var(--yellow-deep)}
+  .btn:disabled{opacity:.35;cursor:not-allowed;transform:none}
+  .actions{display:flex;gap:12px;margin-top:24px;align-items:center}
+  .actions span{color:var(--ink-faint);font-size:12px}
+
+  .uploadzone{border:1.5px dashed var(--line);border-radius:12px;padding:34px;text-align:center;cursor:pointer;transition:.13s;background:var(--panel-2)}
+  .uploadzone:hover{border-color:var(--yellow-deep);background:#fff6f6}
+  .uploadzone .ic{font-size:26px;margin-bottom:8px}
+  .uploadzone b{font-weight:600}
+  .uploadzone p{color:var(--ink-faint);font-size:12px;margin-top:4px}
+  .filechip{display:flex;align-items:center;gap:10px;background:var(--panel-2);border:1px solid var(--line);border-radius:9px;padding:10px 13px;margin-top:10px;font-size:12.5px}
+  .filechip .x{margin-left:auto;color:var(--ink-faint);cursor:pointer}
+  .filechip .ok{color:var(--green);font-family:var(--mono);font-size:11px;font-weight:500}
+
+  table.data{width:100%;border-collapse:collapse;font-size:12.5px;margin-top:6px}
+  table.data th{text-align:left;font-size:10px;letter-spacing:.6px;text-transform:uppercase;color:var(--ink-faint);font-weight:600;padding:9px 10px;border-bottom:1px solid var(--line)}
+  table.data td{padding:9px 10px;border-bottom:1px solid var(--line-soft);font-family:var(--mono);font-size:12px}
+  table.data td.lbl{font-family:var(--sans);color:var(--ink-dim)}
+  table.data tr:hover td{background:var(--panel-2)}
+  .src{display:inline-block;font-size:9px;letter-spacing:.4px;text-transform:uppercase;padding:2px 7px;border-radius:5px;font-family:var(--sans);font-weight:700}
+  .src.ocr{background:rgba(47,111,214,.12);color:var(--blue)}
+  .src.f2{background:rgba(31,138,76,.12);color:var(--green)}
+  .src.cfg{background:rgba(168,116,26,.14);color:var(--gold)}
+  .src.man{background:var(--yellow);color:#fff}
+  .src.calc{background:rgba(143,145,132,.16);color:var(--ink-dim)}
+  .src.tok{background:rgba(130,80,200,.12);color:#7a3fc8}
+
+  .kpi{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-top:18px}
+  .kpi .b{background:var(--panel-2);border:1px solid var(--line);border-radius:10px;padding:14px 16px}
+  .kpi .b small{font-size:10px;letter-spacing:.6px;text-transform:uppercase;color:var(--ink-faint)}
+  .kpi .b div{font-family:var(--mono);font-size:18px;margin-top:5px;font-weight:500}
+  .kpi .b .sub{font-size:11px;color:var(--ink-faint);margin-top:2px;font-family:var(--sans)}
+  .kpi .b .delta{font-size:11px;margin-top:4px;font-family:var(--mono)}
+  .kpi .b .delta.up{color:var(--green)}
+  .kpi .b .delta.down{color:var(--red)}
+
+  .banner{display:flex;gap:12px;align-items:flex-start;border-radius:10px;padding:13px 15px;font-size:12.5px;margin-top:16px;border:1px solid}
+  .banner.warn{background:#fbf4dd;border-color:#e8d48f;color:#7a5f12}
+  .banner.ok{background:#eafaef;border-color:#b6e3c4;color:#1c6b3c}
+  .banner.err{background:#fce8e8;border-color:#e8b6b6;color:#8b2020}
+  .banner .bi{font-size:15px;line-height:1.2}
+  .banner b{color:var(--ink)}
+
+  /* Reserve impact preview */
+  .impact-box{background:var(--panel-2);border:1px solid var(--line);border-radius:12px;padding:18px 20px;margin-top:16px}
+  .impact-box h4{font-size:12px;letter-spacing:.5px;text-transform:uppercase;color:var(--ink-faint);margin-bottom:12px;font-weight:600}
+  .impact-row{display:flex;justify-content:space-between;padding:5px 0;font-size:13px;border-bottom:1px solid var(--line-soft)}
+  .impact-row .val{font-family:var(--mono);font-weight:500}
+  .impact-row .val.pos{color:var(--green)}
+  .impact-row .val.neg{color:var(--red)}
+  .impact-row.total{border-top:1px solid var(--line);font-weight:700;margin-top:4px;padding-top:8px}
+
+  /* Validation list */
+  .vallist{list-style:none;padding:0;margin-top:8px}
+  .vallist li{display:flex;align-items:center;gap:10px;padding:7px 0;font-size:12px;border-bottom:1px solid var(--line-soft);font-family:var(--mono);font-size:11.5px}
+  .vallist li .vi{width:18px;height:18px;flex:0 0 18px;border-radius:5px;display:flex;align-items:center;justify-content:center;font-size:10px}
+  .vallist li .vi.pass{background:rgba(31,138,76,.15);color:var(--green)}
+  .vallist li .vi.warn{background:rgba(168,116,26,.15);color:var(--gold)}
+  .vallist li .vi.fail{background:rgba(200,54,46,.15);color:var(--red)}
+  .vallist li .vn{color:var(--ink-faint);width:36px}
+  .vallist li .vd{flex:1;color:var(--ink-dim)}
+  .vallist li .vs{font-weight:600}
+
+  /* Reserve slider */
+  .slider-wrap{position:relative;margin-top:6px}
+  .slider-ticks{display:flex;justify-content:space-between;font-size:10px;color:var(--ink-faint);font-family:var(--mono);margin-top:4px}
+
+  /* Statement preview */
+  .docwrap{background:var(--panel-2);border-radius:14px;padding:0;overflow:hidden;border:1px solid var(--line);margin-top:18px}
+  .doc{background:#fff;color:#1a1a1a;font-family:Georgia,'Times New Roman',serif;padding:44px 50px;max-width:820px;margin:24px auto;box-shadow:0 6px 30px rgba(20,23,15,.1);position:relative}
+  .doc::after{content:"PREVIEW · NOT PUBLISHED";position:absolute;top:46%;left:50%;transform:translate(-50%,-50%) rotate(-24deg);font-family:var(--sans);font-size:46px;font-weight:800;color:rgba(200,54,46,.06);letter-spacing:6px;pointer-events:none;white-space:nowrap}
+  .doc .dhead{display:flex;justify-content:space-between;align-items:flex-start;border-bottom:2px solid #1a1a1a;padding-bottom:14px}
+  .doc .dlogo{display:flex;align-items:center;gap:9px}
+  .doc .dlogo .m{width:26px;height:26px;border-radius:50%;background:var(--yellow);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:11px;font-family:var(--sans)}
+  .doc .dlogo b{font-family:var(--sans);font-weight:700;font-size:18px;letter-spacing:1px}
+  .doc .dtitle{text-align:right}
+  .doc .dtitle h2{font-family:var(--sans);font-size:16px;letter-spacing:1px;font-weight:700}
+  .doc .dtitle p{font-size:11px;color:#555;font-family:var(--sans);margin-top:2px}
+  .doc .meta{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin:16px 0 6px;font-family:var(--sans)}
+  .doc .meta small{font-size:9px;letter-spacing:1px;color:#888;text-transform:uppercase;display:block}
+  .doc .meta b{font-size:13px}
+  .doc .sec{font-family:var(--sans);font-size:11px;letter-spacing:.5px;font-weight:700;text-transform:uppercase;background:#ececec;padding:6px 10px;margin:22px 0 10px}
+  .doc table{width:100%;border-collapse:collapse;font-family:var(--sans);font-size:11.5px}
+  .doc table td{padding:5px 8px;border-bottom:1px solid #eee}
+  .doc table td.r{text-align:right;font-variant-numeric:tabular-nums}
+  .doc table td.lab{color:#333}
+  .doc table td.basis{color:#999;font-size:10px;font-family:var(--mono)}
+  .doc .subt td{font-weight:700;border-top:1px solid #ccc;border-bottom:none}
+  .doc .totl td{font-weight:700;background:#f6f6f6}
+  .doc .neg{color:#c8362e}
+  .doc .pos{color:#1a7a44}
+  .doc .docfoot{margin-top:26px;border-top:1px solid #ddd;padding-top:10px;font-family:var(--sans);font-size:9.5px;color:#999;display:flex;justify-content:space-between}
+  .pagetag{text-align:center;font-family:var(--sans);font-size:10px;color:var(--ink-faint);padding:8px;letter-spacing:1px;font-weight:600}
+  .gold-star{color:var(--gold);font-weight:700}
+  .mode-pill{display:inline-block;font-size:10px;letter-spacing:.5px;text-transform:uppercase;padding:3px 10px;border-radius:6px;border:1px solid var(--gold);color:var(--gold);background:rgba(168,116,26,.08);font-family:var(--sans);font-weight:700}
+
+  .twocol{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+  .minih{font-size:11px;letter-spacing:.6px;text-transform:uppercase;color:var(--ink-faint);margin:2px 0 8px}
+
+  .modal-bg{position:fixed;inset:0;background:rgba(20,23,15,.4);backdrop-filter:blur(4px);display:flex;align-items:center;justify-content:center;z-index:100}
+  .modal{background:var(--panel);border:1px solid var(--line);border-radius:16px;width:480px;max-width:92vw;padding:28px;box-shadow:0 30px 80px rgba(20,23,15,.25)}
+  .modal h3{font-family:var(--serif);font-size:24px;margin-bottom:8px;font-weight:500}
+  .modal p{color:var(--ink-dim);font-size:13px;margin-bottom:6px}
+  .modal .sumbox{background:var(--panel-2);border:1px solid var(--line);border-radius:10px;padding:15px;margin:16px 0;font-size:12.5px}
+  .modal .sumbox .row{display:flex;justify-content:space-between;padding:4px 0}
+  .modal .sumbox .row b{font-family:var(--mono)}
+  .modal .mact{display:flex;gap:10px;justify-content:flex-end;margin-top:18px}
+
+  .hide{display:none!important}
+  .toast{position:fixed;bottom:26px;left:50%;transform:translateX(-50%);background:var(--ink);color:var(--yellow);padding:13px 24px;border-radius:30px;font-weight:600;font-size:13px;z-index:200;box-shadow:0 10px 30px rgba(20,23,15,.3)}
+
+  .radio-row{display:flex;gap:10px;margin-top:4px}
+  .radio-card{flex:1;border:1px solid var(--line);border-radius:11px;padding:14px 15px;cursor:pointer;transition:.13s;background:var(--panel)}
+  .radio-card:hover{border-color:var(--ink-faint)}
+  .radio-card.sel{border-color:var(--ink);background:#fff6f6;box-shadow:0 0 0 3px rgba(255,76,76,.2)}
+  .radio-card b{font-size:13.5px}
+  .radio-card p{font-size:11.5px;color:var(--ink-faint);margin-top:3px}
+  .legend{display:flex;flex-wrap:wrap;gap:14px;margin-top:16px;font-size:11px;color:var(--ink-dim)}
+  .legend span{display:inline-flex;align-items:center;gap:6px}
+
+  .divider{height:1px;background:var(--line);margin:20px 0}
+  .sechead{font-size:12px;font-weight:700;letter-spacing:.4px;text-transform:uppercase;color:var(--ink);margin:16px 0 10px;display:flex;align-items:center;gap:8px}
+  .sechead::after{content:'';flex:1;height:1px;background:var(--line-soft)}
+</style>
+</head>
+<body>
+<div class="app">
+  <!-- SIDEBAR -->
+  <aside class="side">
+    <div class="brand">
+      <div class="logo">T</div>
+      <div><b>Tokenest</b><span>Ops Console v2</span></div>
+    </div>
+    <div class="nav-label">Generate Statement</div>
+    <div class="step active" data-step="1" id="nav1"><div class="num">1</div><div>Statement Setup</div></div>
+    <div class="step" data-step="2" id="nav2"><div class="num">2</div><div>Period &amp; Cash Reserves</div></div>
+    <div class="step" data-step="3" id="nav3"><div class="num">3</div><div>Upload YIMIAO Bill</div></div>
+    <div class="step" data-step="4" id="nav4"><div class="num">4</div><div>Data Review &amp; Validate</div></div>
+    <div class="step" data-step="5" id="nav5"><div class="num">5</div><div>Preview &amp; Publish</div></div>
+    <div class="side-foot">
+      Internal finance tool. All data <b>backed up server-side</b>. Cash Reserves Model v2.<br><br>
+      Project: <code>TKD-PRJ-001</code><br>Console v2.0 · demo
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <div class="main">
+    <div class="topbar">
+      <div class="ctx" id="topctx">New statement draft</div>
+      <span class="pill gold" id="pillmode">MODE: BTC + RESERVES</span>
+      <div class="spacer"></div>
+      <div class="pill live">● backup: on</div>
+      <div class="who"><div class="av">FY</div> Finance · Yi Lin</div>
+    </div>
+
+    <div class="stage">
+
+      <!-- ===================== STEP 1 ===================== -->
+      <section id="s1">
+        <div class="h1">Statement Setup</div>
+        <div class="sub">Select the investor and project. Investor data is auto-loaded from <b>Tokenest Finance Module</b> — equipment capital, cash reserves, and methodology are locked per the Subscription Agreement.</div>
+        <div class="stepline">STEP 01 / 05 · TOKENEST DATA SOURCE</div>
+
+        <div class="card">
+          <h3><span class="dot"></span>Investor &amp; Project <span class="src tok" style="margin-left:6px">TOKENEST</span></h3>
+          <div class="hint">Selecting an investor auto-populates all static fields from Tokenest. These values are locked and cannot be edited here.</div>
+          <div class="grid g2">
+            <div>
+              <label class="fl">Project</label>
+              <select id="f_project">
+                <option value="TKD-PRJ-001">TKD-PRJ-001 · Antminer S21 Pro Pool (IKUYO / F2Pool)</option>
+                <option value="TKD-PRJ-002">TKD-PRJ-002 · S21 Hydro Pool</option>
+              </select>
+            </div>
+            <div>
+              <label class="fl">Investor</label>
+              <select id="f_investor">
+                <option value="John D. XX|TKD-INV-00047|bc1qxy2…x0w1h|50|213350|30000|reserves|Sarah Lim, CFA">John D. XX · TKD-INV-00047 (50 Units · BTC+Reserves)</option>
+                <option value="Aiko T.|TKD-INV-00031|bc1q8h4…m2v9p|120|512040|60000|btconly|Sarah Lim, CFA">Aiko T. · TKD-INV-00031 (120 Units · BTC Only)</option>
+                <option value="Marcus L.|TKD-INV-00088|bc1qr7t…k4d1s|35|149345|15000|reserves|Sarah Lim, CFA">Marcus L. · TKD-INV-00088 (35 Units · BTC+Reserves)</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="divider"></div>
+          <div class="sechead">Subscription &amp; Fleet (Tokenest auto-populated)</div>
+          <div class="grid g4" style="margin-top:8px">
+            <div>
+              <label class="fl">Units Owned <span class="src tok">TOKENEST</span></label>
+              <input class="mono" id="f_units" value="50" readonly>
+            </div>
+            <div>
+              <label class="fl">Fleet Total Units <span class="src cfg">CONFIG</span></label>
+              <input class="mono" id="f_pool" value="900" readonly>
+            </div>
+            <div>
+              <label class="fl">Pro-rata Share <span class="src calc">DERIVED</span></label>
+              <input class="mono" id="f_share" value="50 / 900 = 5.5556%" readonly>
+            </div>
+            <div>
+              <label class="fl">BTC Wallet <span class="src tok">TOKENEST</span></label>
+              <input class="mono" id="f_wallet" value="bc1qxy2…x0w1h" readonly>
+            </div>
+          </div>
+
+          <div class="divider"></div>
+          <div class="sechead">Capital Structure &amp; Reserve Methodology (Tokenest · locked by Subscription Agreement)</div>
+          <div class="grid g4" style="margin-top:8px">
+            <div>
+              <label class="fl">Equipment Capital <span class="src tok">TOKENEST</span></label>
+              <input class="mono" id="f_equip" value="$213,350" readonly>
+            </div>
+            <div>
+              <label class="fl">Cash Reserves (Initial) <span class="src tok">TOKENEST</span></label>
+              <input class="mono" id="f_cashinit" value="$30,000" readonly>
+            </div>
+            <div>
+              <label class="fl">Total Subscription <span class="src calc">DERIVED</span></label>
+              <input class="mono" id="f_totsub" value="$243,350" readonly>
+            </div>
+            <div>
+              <label class="fl">Reserve Methodology <span class="src tok">TOKENEST · LOCKED</span></label>
+              <input id="f_method" value="OPEX_FROM_BTC_AND_RESERVES" readonly style="color:var(--gold);font-weight:600">
+            </div>
+          </div>
+
+          <div class="grid g2" style="margin-top:12px">
+            <div>
+              <label class="fl">Miner Model <span class="src cfg">CONFIG</span></label>
+              <input id="f_model" value="Bitmain Antminer S21 Pro" readonly>
+            </div>
+            <div>
+              <label class="fl">Nameplate Hashrate / Unit <span class="src cfg">CONFIG</span></label>
+              <input class="mono" id="f_hr" value="240 TH/s · 16.2 J/TH" readonly>
+            </div>
+          </div>
+        </div>
+        <div class="actions">
+          <button class="btn" onclick="go(2)">Continue →</button>
+          <span>Setup is auto-populated from Tokenest. Edit investor data in Tokenest Finance Module.</span>
+        </div>
+      </section>
+
+      <!-- ===================== STEP 2 ===================== -->
+      <section id="s2" class="hide">
+        <div class="h1">Period, Pricing &amp; Cash Reserves</div>
+        <div class="sub">Set the statement period, pricing, and make the <b>cash reserves allocation decision</b> for this month. The reserve draw amount determines how much opex is funded from reserves vs. BTC deduction.</div>
+        <div class="stepline">STEP 02 / 05 · MANAGER DECISION POINT</div>
+
+        <div class="card">
+          <h3><span class="dot"></span>Statement Period</h3>
+          <div class="hint">Determines days in period. Statement number is auto-generated.</div>
+          <div class="grid g3">
+            <div>
+              <label class="fl">Month</label>
+              <select id="f_month">
+                <option value="2026-02|Feb 1 – Feb 28 2026|28|TKD-2026-02-0047">February 2026</option>
+                <option value="2026-04|Apr 1 – Apr 30 2026|30|TKD-2026-04-0047">April 2026</option>
+                <option value="2026-03|Mar 1 – Mar 31 2026|31|TKD-2026-03-0047">March 2026</option>
+              </select>
+            </div>
+            <div><label class="fl">Days in Period <span class="src calc">DERIVED</span></label><input class="mono" id="f_days" value="28" readonly></div>
+            <div><label class="fl">Statement No. <span class="src calc">AUTO</span></label><input class="mono" id="f_stmtno" value="TKD-2026-02-0047" readonly></div>
+          </div>
+          <div class="banner ok"><span class="bi">✓</span><div>Prior statement found: <b>TKD-2026-01-0047</b> · Closing BTC: 0.065828 ₿ · Closing Reserve: $12,500.00</div></div>
+        </div>
+
+        <div class="card">
+          <h3><span class="dot"></span>BTC Account &amp; Pricing</h3>
+          <div class="grid g2">
+            <div>
+              <label class="fl">Opening Balance BTC <span class="src calc">AUTO · from T-1</span></label>
+              <input class="mono" id="f_open" type="number" step="0.00000001" value="0.00000000">
+              <div style="font-size:11px;color:var(--ink-faint);margin-top:4px">Carried from TKD-2026-01-0047 closing. Manual override if needed.</div>
+            </div>
+            <div>
+              <label class="fl">Investor Withdrawal BTC <span class="src man">MANUAL</span></label>
+              <input class="mono" id="f_wdr" type="number" step="0.00000001" value="0.02000000">
+              <div style="font-size:11px;color:var(--ink-faint);margin-top:4px">Pull from BitGo or enter manually.</div>
+            </div>
+          </div>
+          <div class="grid g2" style="margin-top:16px">
+            <div>
+              <label class="fl">Period VWAP BTC/USD <span class="src f2">CME CF</span></label>
+              <input class="mono" id="f_vwap" value="$96,400" readonly>
+              <div style="font-size:11px;color:var(--ink-faint);margin-top:4px">CME CF Bitcoin Reference Rate · period average</div>
+            </div>
+            <div>
+              <label class="fl">Avg BTC Reporting Price <span class="src man">MANUAL</span></label>
+              <input class="mono" id="f_reportprice" type="number" value="96400">
+              <button class="btn ghost" style="padding:6px 12px;font-size:11px;margin-top:6px" onclick="document.getElementById('f_reportprice').value=96400;syncAll()">Use CME VWAP</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- CASH RESERVES DECISION — THE CORE NEW FEATURE -->
+        <div class="card" style="border:1.5px solid var(--gold);background:rgba(168,116,26,.02)">
+          <h3><span class="dot" style="background:var(--gold)"></span>Cash Reserves Decision <span class="mode-pill" id="modepill">BTC + RESERVES</span></h3>
+          <div class="hint">The Manager decides how much of the investor's pro-rata opex is funded from cash reserves this period. The remainder will be deducted from BTC. This directly affects the investor's net BTC distribution.</div>
+
+          <div class="grid g2">
+            <div>
+              <label class="fl">Reserve Opening Balance <span class="src calc">AUTO · from T-1</span></label>
+              <input class="mono" id="f_rsvopen" value="$18,500.00" readonly style="font-size:16px;font-weight:600">
+            </div>
+            <div>
+              <label class="fl">Pro-rata Opex (estimated) <span class="src calc">ESTIMATE</span></label>
+              <input class="mono" id="f_opexest" value="$12,153.47" readonly>
+              <div style="font-size:11px;color:var(--ink-faint);margin-top:4px">Final amount confirmed after YIMIAO bill upload in Step 3</div>
+            </div>
+          </div>
+
+          <div class="divider"></div>
+          <div class="sechead">Manager Decision: Opex Funded from Reserves This Period</div>
+          <div class="grid g2" style="margin-top:8px">
+            <div>
+              <label class="fl">Opex from Reserves (USD) <span class="src man">MANAGER INPUT · F156</span></label>
+              <div style="display:flex;align-items:center;gap:12px">
+                <input type="range" id="f_rsvdraw_slider" min="0" max="12153" value="6000" step="100" style="flex:1" oninput="syncReserveDraw()">
+                <input class="mono" id="f_rsvdraw" type="number" value="6000" step="100" style="width:130px;text-align:right;font-size:16px;font-weight:600" oninput="syncReserveSlider()">
+              </div>
+              <div class="slider-ticks"><span>$0</span><span>$3,000</span><span>$6,000</span><span>$9,000</span><span>$12,153</span></div>
+              <div style="font-size:11px;color:var(--ink-faint);margin-top:6px">Constraint: 0 ≤ draw ≤ MIN($18,500 reserve balance, $12,153.47 pro-rata opex)</div>
+            </div>
+            <div>
+              <label class="fl">Reserve Top-up from BTC (USD) <span class="src man">MANAGER INPUT · F157 · OPTIONAL</span></label>
+              <input class="mono" id="f_rsvtopup" type="number" value="0" step="100" oninput="syncAll()">
+              <div style="font-size:11px;color:var(--ink-faint);margin-top:4px">If > $0, equivalent BTC will be deducted and credited to reserves.</div>
+            </div>
+          </div>
+
+          <!-- LIVE IMPACT PREVIEW -->
+          <div class="impact-box" id="impactBox">
+            <h4>📐 Live Impact Preview</h4>
+            <div class="impact-row"><span>Total Pro-rata Opex</span><span class="val" id="imp_opex">$12,153.47</span></div>
+            <div class="impact-row"><span>├─ Funded from Cash Reserves</span><span class="val pos" id="imp_fromrsv">$6,000.00 (49.4%)</span></div>
+            <div class="impact-row"><span>└─ Funded from BTC Deduction</span><span class="val neg" id="imp_frombtc">$6,153.47 (50.6%) = 0.063833 ₿</span></div>
+            <div class="impact-row" style="margin-top:8px"><span>Reserve Closing Balance</span><span class="val" id="imp_rsvclose">$12,500.00</span></div>
+            <div class="impact-row"><span>Reserve Runway (at current draw rate)</span><span class="val" id="imp_runway">~2.1 months</span></div>
+            <div class="impact-row total"><span>→ Est. Net BTC to Investor</span><span class="val pos" id="imp_netbtc" style="font-size:15px">~0.085828 ₿</span></div>
+            <div class="impact-row"><span>→ Est. Net Economic Return</span><span class="val" id="imp_neteco">$2,273.81</span></div>
+            <div style="font-size:11px;color:var(--ink-faint);margin-top:8px">Net Economic Return = Net BTC in USD − Reserve Drawdown. Should ≈ BTC_ONLY mode result (invariance check V020).</div>
+          </div>
+
+          <div id="rsv_warnings"></div>
+        </div>
+
+        <div class="actions">
+          <button class="btn ghost" onclick="go(1)">← Back</button>
+          <button class="btn" onclick="go(3)">Continue →</button>
+        </div>
+      </section>
+
+      <!-- ===================== STEP 3 ===================== -->
+      <section id="s3" class="hide">
+        <div class="h1">Upload YIMIAO Bill</div>
+        <div class="sub">Attach the supplier invoices from <b>YIMIAO TECH PTE. LTD.</b>: the electricity Operating-Cost bill and the Management-Fee bill. OCR extracts the figures for tie-out validation against F2Pool data.</div>
+        <div class="stepline">STEP 03 / 05 · PROJECT-LEVEL DOCUMENTS</div>
+
+        <div class="card">
+          <h3><span class="dot"></span>Supplier Invoices · YIMIAO TECH PTE. LTD.</h3>
+          <div class="hint">Two invoices required per monthly close. Drag & drop or click. Demo pre-loaded with Feb 2026 IKUYO bills.</div>
+          <div class="uploadzone" onclick="loadBills()">
+            <div class="ic">📄</div>
+            <b>Drop YIMIAO PDFs here</b>
+            <p>invoice-…Operating-Cost.pdf · invoice-…Management-Fee.pdf</p>
+          </div>
+          <div id="billchips"></div>
+        </div>
+
+        <div class="card" id="ocrSummary" style="display:none">
+          <h3><span class="dot"></span>OCR Extraction Summary</h3>
+          <table class="data">
+            <thead><tr><th>Field</th><th>Extracted Value</th><th>Status</th></tr></thead>
+            <tbody>
+              <tr><td class="lbl">Total hashrate (period sum)</td><td>8,525,515.82 TH/s</td><td><span class="src f2">✓ CONFIRMED</span></td></tr>
+              <tr><td class="lbl">Power cost (pre-tax)</td><td>$144,397.47</td><td><span class="src f2">✓ CONFIRMED</span></td></tr>
+              <tr><td class="lbl">Power tax (14.9%)</td><td>$21,515.22</td><td><span class="src f2">✓ CONFIRMED</span></td></tr>
+              <tr><td class="lbl">Power total (incl. tax)</td><td>$165,912.69</td><td><span class="src f2">✓ CONFIRMED</span></td></tr>
+              <tr><td class="lbl">Hosting fee</td><td>$46,579.83</td><td><span class="src f2">✓ CONFIRMED</span></td></tr>
+              <tr><td class="lbl">Fleet BTC income</td><td>2.993226 ₿</td><td><span class="src f2">✓ CONFIRMED</span></td></tr>
+              <tr><td class="lbl">Operator fee (6%)</td><td>0.179594 ₿</td><td><span class="src f2">✓ CONFIRMED</span></td></tr>
+            </tbody>
+          </table>
+          <div class="banner ok" style="margin-top:12px"><span class="bi">✓</span><div>
+            <b>Tie-out checks passed:</b><br>
+            V025: Operator hashrate vs F2Pool — deviation 0.03% (limit 0.5%)<br>
+            V026: Operator BTC income vs F2Pool fleet total — deviation 0.0001 ₿ (limit 0.001 ₿)
+          </div></div>
+        </div>
+
+        <div class="actions">
+          <button class="btn ghost" onclick="go(2)">← Back</button>
+          <button class="btn" id="b3next" disabled onclick="go(4)">Run OCR &amp; Continue →</button>
+        </div>
+      </section>
+
+      <!-- ===================== STEP 4 ===================== -->
+      <section id="s4" class="hide">
+        <div class="h1">Data Review &amp; Validation</div>
+        <div class="sub">All data sources, calculations, and validations in one view. <b>Finance staff only.</b> Every validation must pass (or be acknowledged) before the statement can advance to READY_FOR_DISTRIBUTION.</div>
+        <div class="stepline">STEP 04 / 05 · FINANCE-ONLY · ALL VALIDATIONS MUST PASS</div>
+
+        <div class="legend">
+          <span><i class="src tok">TOKENEST</i> investor data</span>
+          <span><i class="src f2">F2POOL</i> mining telemetry</span>
+          <span><i class="src ocr">OCR</i> from YIMIAO bill</span>
+          <span><i class="src cfg">CONFIG</i> platform constant</span>
+          <span><i class="src man">MANUAL</i> finance/manager input</span>
+          <span><i class="src calc">CALC</i> derived</span>
+        </div>
+
+        <!-- Data Sources Summary -->
+        <div class="card">
+          <h3><span class="dot"></span>Data Sources — Project Level <span class="src f2" style="margin-left:6px">F2POOL + OCR</span></h3>
+          <table class="data">
+            <thead><tr><th style="width:38%">Field</th><th>Value</th><th>Source</th></tr></thead>
+            <tbody id="t_real"></tbody>
+          </table>
+        </div>
+
+        <!-- Earnings Waterfall -->
+        <div class="card">
+          <h3><span class="dot"></span>Earnings Waterfall — Investor Allocation <span class="src calc" style="margin-left:6px">CALC</span></h3>
+          <div class="hint">Pro-rata: <span id="prorataDisp">50 / 900 = 5.5556%</span>. Period VWAP: $96,400/BTC. <b>Opex deducted = BTC-funded portion only</b> (after reserve offset).</div>
+          <table class="data">
+            <thead><tr><th style="width:38%">Line Item</th><th>BTC</th><th>USD (Est.)</th></tr></thead>
+            <tbody id="t_waterfall"></tbody>
+          </table>
+        </div>
+
+        <!-- Cash Reserves Detail -->
+        <div class="card" style="border-left:3px solid var(--gold)">
+          <h3><span class="dot" style="background:var(--gold)"></span>Cash Reserves Ledger <span class="src calc" style="margin-left:6px">CALC + MANAGER</span></h3>
+          <table class="data">
+            <thead><tr><th style="width:38%">Entry</th><th>Reference</th><th>USD</th><th>Balance After</th></tr></thead>
+            <tbody id="t_rsvledger"></tbody>
+          </table>
+          <div style="font-size:11px;color:var(--ink-faint);margin-top:8px">Inception reserve: $30,000.00. Drawn ITD: $17,500.00. Top-ups ITD: $0.00.</div>
+        </div>
+
+        <!-- Opex Funding Split -->
+        <div class="card">
+          <h3><span class="dot"></span>Opex Funding Breakdown <span class="src calc" style="margin-left:6px">CALC</span></h3>
+          <table class="data">
+            <thead><tr><th style="width:38%">Component</th><th>USD</th><th>Share</th><th>BTC Impact</th></tr></thead>
+            <tbody id="t_opexsplit"></tbody>
+          </table>
+        </div>
+
+        <!-- Formula Mapping -->
+        <div class="card">
+          <h3><span class="dot"></span>Formula Mapping — Audit Trail <span class="src calc" style="margin-left:6px">UPDATED v2</span></h3>
+          <table class="data">
+            <tbody id="t_formulas"></tbody>
+          </table>
+        </div>
+
+        <!-- Validation Panel -->
+        <div class="card">
+          <h3><span class="dot"></span>Validation Results</h3>
+          <div class="hint">Blocking validations (✗) must be resolved before statement can advance. Warnings (⚠) are advisory.</div>
+          <ul class="vallist" id="vallist"></ul>
+          <div id="valSummary" style="margin-top:14px"></div>
+        </div>
+
+        <div class="actions">
+          <button class="btn ghost" onclick="go(3)">← Back</button>
+          <button class="btn" id="b4next" onclick="go(5)">Generate Statement Preview →</button>
+        </div>
+      </section>
+
+      <!-- ===================== STEP 5 ===================== -->
+      <section id="s5" class="hide">
+        <div class="h1">Preview &amp; Publish</div>
+        <div class="sub">Auto-generated TKD monthly statement based on all data and the Cash Reserves decision. This is what the investor will see. Publish when ready.</div>
+        <div class="stepline">STEP 05 / 05 · PREVIEW ONLY UNTIL PUBLISHED</div>
+
+        <div class="docwrap">
+          <div class="pagetag">CLIENT SUMMARY — 1 PAGE</div>
+          <div class="doc" id="docClient"></div>
+          <div class="pagetag">DATA APPENDIX · PAGE 1 — ACCOUNT STATEMENT + CASH RESERVES LEDGER</div>
+          <div class="doc" id="docApp1"></div>
+          <div class="pagetag">DATA APPENDIX · PAGE 2 — EARNINGS WATERFALL</div>
+          <div class="doc" id="docApp2"></div>
+          <div class="pagetag">DATA APPENDIX · PAGE 3 — OPERATING COSTS</div>
+          <div class="doc" id="docApp3"></div>
+        </div>
+
+        <div class="card">
+          <h3><span class="dot"></span>Publish Schedule</h3>
+          <div class="hint">Choose how this statement is released to the investor.</div>
+          <div class="radio-row" id="schedRow">
+            <div class="radio-card sel" data-sched="now" onclick="pickSched(this)"><b>Publish now</b><p>Release immediately to investor portal &amp; email.</p></div>
+            <div class="radio-card" data-sched="schedule" onclick="pickSched(this)"><b>Schedule</b><p>Release on a chosen date/time.</p></div>
+            <div class="radio-card" data-sched="draft" onclick="pickSched(this)"><b>Save as draft</b><p>Keep internal; do not release.</p></div>
+          </div>
+          <div id="schedDate" class="hide" style="margin-top:14px;max-width:280px">
+            <label class="fl">Release at</label>
+            <input type="datetime-local" id="f_sched" value="2026-03-01T09:00">
+          </div>
+        </div>
+
+        <div class="actions">
+          <button class="btn ghost" onclick="go(4)">← Back</button>
+          <button class="btn yellow" id="publishBtn" onclick="askPublish()">Publish statement</button>
+        </div>
+      </section>
+
+    </div>
+  </div>
+</div>
+
+<!-- MODAL -->
+<div id="modal" class="modal-bg hide">
+  <div class="modal">
+    <h3>Confirm publish</h3>
+    <p>You're about to release this statement to the investor. This action notifies the investor and writes the closing balance to their ledger.</p>
+    <div class="sumbox" id="modalsum"></div>
+    <div class="mact">
+      <button class="btn ghost" onclick="closeModal()">Cancel</button>
+      <button class="btn yellow" onclick="confirmPublish()">Yes, publish now</button>
+    </div>
+  </div>
+</div>
+<div id="toast" class="toast hide"></div>
+
+<script>
+/* ======================== STATE ======================== */
+const S = {
+  // Step 1 — Tokenest data (auto-populated, locked)
+  investor:'John D. XX', invId:'TKD-INV-00047', wallet:'bc1qxy2…x0w1h',
+  units:50, pool:900,
+  equipCap:213350, cashInit:30000, totSub:243350,
+  method:'OPEX_FROM_BTC_AND_RESERVES', // or OPEX_FROM_BTC_ONLY
+  rmName:'Sarah Lim, CFA',
+
+  // Step 2
+  month:'Feb 1 – Feb 28 2026', days:28, stmtNo:'TKD-2026-02-0047',
+  openBal:0.0, wdr:0.02000000,
+  vwap:96400, reportPrice:96400,
+  rsvOpen:18500.00,         // from T-1 closing
+  rsvDraw:6000.00,           // MANAGER DECISION — F156
+  rsvTopup:0.00,             // F157
+  priorCloseBTC:0.065828,   // for display
+  priorCloseRsv:18500.00,
+
+  // Step 3
+  billsLoaded:false,
+  sched:'now'
+};
+
+/* F2Pool + YIMIAO data (Feb 2026) */
+const REAL = {
+  fleetBTC:2.993226,
+  powerPre:144397.47,
+  powerTax:21515.22,
+  powerTotal:165912.69,
+  hostingFee:46579.83,
+  insuranceFee:3520.28,
+  custodyFee:1500.00,
+  complianceFee:1250.00,
+  repairsFee:0.00,
+  fixedOpexSub:6270.28,
+  phSub:212492.52,
+  fleetOpexTotal:218762.80,
+  uptime:0.99,
+  fleetMW:3.50,
+  networkDiff:109.4,
+  hashprice:0.0554,
+  operatorFeeRate:0.06,
+  adminFeeRate:0.04,
+  uptimePrior:0.986,
+  diffPrior:112.0,
+  hashpricePrior:0.0517
+};
+
+/* ======================== HELPERS ======================== */
+const fmt=(n,d=2)=>n.toLocaleString('en-US',{minimumFractionDigits:d,maximumFractionDigits:d});
+const btc=(n)=>n.toLocaleString('en-US',{minimumFractionDigits:6,maximumFractionDigits:8});
+const usd=(n)=>'$'+fmt(n,2);
+const pct=(n)=>fmt(n*100,1)+'%';
+
+/* ======================== NAVIGATION ======================== */
+function go(step){
+  for(let i=1;i<=5;i++){
+    document.getElementById('s'+i).classList.toggle('hide', i!==step);
+    const nav=document.getElementById('nav'+i);
+    nav.classList.toggle('active', i===step);
+    nav.classList.toggle('done', i<step);
+  }
+  if(step===4) buildReview();
+  if(step===5) buildDocs();
+  window.scrollTo({top:0,behavior:'smooth'});
+  document.getElementById('topctx').innerHTML = 'Draft · <b>'+S.investor+'</b> · '+S.month;
+}
+
+/* ======================== SYNC ======================== */
+function syncSetup(){
+  const inv=document.getElementById('f_investor').value.split('|');
+  S.investor=inv[0]; S.invId=inv[1]; S.wallet=inv[2];
+  S.units=+inv[3]; S.equipCap=+inv[4]; S.cashInit=+inv[5];
+  S.method=inv[6]==='reserves'?'OPEX_FROM_BTC_AND_RESERVES':'OPEX_FROM_BTC_ONLY';
+  S.rmName=inv[7]; S.totSub=S.equipCap+S.cashInit;
+
+  document.getElementById('f_units').value=S.units;
+  document.getElementById('f_pool').value=S.pool;
+  document.getElementById('f_share').value=S.units+' / '+S.pool+' = '+fmt(S.units/S.pool*100,4)+'%';
+  document.getElementById('f_wallet').value=S.wallet;
+  document.getElementById('f_equip').value=usd(S.equipCap);
+  document.getElementById('f_cashinit').value=usd(S.cashInit);
+  document.getElementById('f_totsub').value=usd(S.totSub);
+  document.getElementById('f_method').value=S.method;
+
+  // Update mode pill
+  const isReserves = S.method==='OPEX_FROM_BTC_AND_RESERVES';
+  document.getElementById('modepill').textContent = isReserves ? 'BTC + RESERVES' : 'BTC ONLY';
+  document.getElementById('modepill').style.display = 'inline-block';
+  document.getElementById('pillmode').textContent = 'MODE: '+(isReserves?'BTC + RESERVES':'BTC ONLY');
+  document.getElementById('pillmode').className = isReserves?'pill gold':'pill';
+
+  // If BTC_ONLY, lock reserve draw to 0
+  if(!isReserves){
+    document.getElementById('f_rsvdraw').value=0;
+    document.getElementById('f_rsvdraw_slider').value=0;
+    document.getElementById('f_rsvdraw').readOnly=true;
+    document.getElementById('f_rsvdraw_slider').disabled=true;
+    document.getElementById('f_rsvtopup').value=0;
+    document.getElementById('f_rsvtopup').readOnly=true;
+  } else {
+    document.getElementById('f_rsvdraw').readOnly=false;
+    document.getElementById('f_rsvdraw_slider').disabled=false;
+    document.getElementById('f_rsvtopup').readOnly=false;
+  }
+  syncAll();
+}
+
+document.getElementById('f_investor').addEventListener('change', syncSetup);
+
+document.getElementById('f_month').addEventListener('change', e => {
+  const m=e.target.value.split('|'); S.month=m[1]; S.days=+m[2]; S.stmtNo=m[3];
+  document.getElementById('f_days').value=m[2];
+  document.getElementById('f_stmtno').value=m[3];
+  syncAll();
+});
+
+['f_open','f_wdr','f_reportprice'].forEach(id=>
+  document.getElementById(id).addEventListener('input',()=>{
+    S.openBal=+document.getElementById('f_open').value||0;
+    S.wdr=+document.getElementById('f_wdr').value||0;
+    S.reportPrice=+document.getElementById('f_reportprice').value||0;
+    syncAll();
+  }));
+
+function syncReserveDraw(){
+  const v=+document.getElementById('f_rsvdraw_slider').value;
+  document.getElementById('f_rsvdraw').value=v;
+  S.rsvDraw=v;
+  syncAll();
+}
+function syncReserveSlider(){
+  const v=+document.getElementById('f_rsvdraw').value||0;
+  document.getElementById('f_rsvdraw_slider').value=Math.min(v,12153);
+  S.rsvDraw=v;
+  syncAll();
+}
+document.getElementById('f_rsvtopup').addEventListener('input',function(){
+  S.rsvTopup=+this.value||0; syncAll();
+});
+
+/* ======================== LIVE IMPACT ======================== */
+function syncAll(){
+  const share=S.units/S.pool;
+  const isReserves = S.method==='OPEX_FROM_BTC_AND_RESERVES';
+  const draw = isReserves ? S.rsvDraw : 0;
+  const topup = isReserves ? S.rsvTopup : 0;
+  const opexInv = REAL.fleetOpexTotal * share;
+  const opexFromBTC = opexInv - draw;
+  const opexFromBTC_btc = opexFromBTC / S.vwap;
+  const invBTC = REAL.fleetBTC * share;
+  const totFee = invBTC * (REAL.operatorFeeRate + REAL.adminFeeRate);
+  const netBTC = invBTC - opexFromBTC_btc - totFee;
+  const netUSD = netBTC * S.reportPrice;
+  const rsvClose = S.rsvOpen - draw + topup;
+  const runway = draw > 0 ? rsvClose / draw : 999;
+  const netEco = netUSD - draw;
+
+  // Update impact box
+  document.getElementById('imp_opex').textContent = usd(opexInv);
+  document.getElementById('imp_fromrsv').textContent = usd(draw)+' ('+pct(draw/opexInv)+')';
+  document.getElementById('imp_frombtc').textContent = usd(opexFromBTC)+' ('+pct(opexFromBTC/opexInv)+') = '+btc(opexFromBTC_btc)+' ₿';
+  document.getElementById('imp_rsvclose').textContent = usd(rsvClose);
+  document.getElementById('imp_runway').textContent = draw > 0 ? '~'+fmt(runway,1)+' months' : 'N/A (no draw)';
+  document.getElementById('imp_netbtc').textContent = '~'+btc(netBTC)+' ₿';
+  document.getElementById('imp_neteco').textContent = usd(netEco);
+
+  // Warnings
+  let warns='';
+  if(draw > S.rsvOpen) warns += '<div class="banner err"><span class="bi">✗</span><div><b>V018 FAIL:</b> Reserve draw ($'+fmt(draw)+') exceeds available balance ($'+fmt(S.rsvOpen)+'). Reduce draw amount.</div></div>';
+  if(draw > opexInv) warns += '<div class="banner err"><span class="bi">✗</span><div><b>V018 FAIL:</b> Reserve draw exceeds pro-rata opex ($'+fmt(opexInv)+').</div></div>';
+  if(runway < 3 && draw > 0) warns += '<div class="banner warn"><span class="bi">⚠</span><div><b>V023 WARNING:</b> Reserve runway ~'+fmt(runway,1)+' months (< 3 months). RM should contact investor about top-up.</div></div>';
+  if(!isReserves && draw > 0) warns += '<div class="banner err"><span class="bi">✗</span><div><b>V019 FAIL:</b> Mode is BTC_ONLY but reserve draw > $0. Draw forced to $0.</div></div>';
+  document.getElementById('rsv_warnings').innerHTML = warns;
+
+  // Slider max
+  document.getElementById('f_rsvdraw_slider').max = Math.floor(Math.min(S.rsvOpen, opexInv));
+}
+
+/* ======================== STEP 3 ======================== */
+function loadBills(){
+  S.billsLoaded=true;
+  document.getElementById('billchips').innerHTML=`
+    <div class="filechip">📄 invoice-260501001_YIMIAO_Operating-Cost.pdf <span class="ok">OCR ✓ extracted</span><span class="x" onclick="this.parentElement.remove()">✕</span></div>
+    <div class="filechip">📄 invoice-260501002_YIMIAO_Management-Fee.pdf <span class="ok">OCR ✓ extracted</span><span class="x" onclick="this.parentElement.remove()">✕</span></div>
+    <div class="banner ok" style="margin-top:12px"><span class="bi">✓</span><div>2 invoices ingested &amp; <b>backed up server-side</b>. Fleet total <b>${btc(REAL.fleetBTC)} BTC</b>. Power total: <b>${usd(REAL.powerTotal)}</b>. Hosting: <b>${usd(REAL.hostingFee)}</b>.</div></div>`;
+  document.getElementById('b3next').disabled=false;
+  document.getElementById('ocrSummary').style.display='block';
+}
+
+/* ======================== STEP 4 ======================== */
+function row(l,v,src){return `<tr><td class="lbl">${l}</td><td>${v}</td><td><span class="src ${src.c}">${src.t}</span></td></tr>`;}
+
+function buildReview(){
+  const share=S.units/S.pool;
+  const isReserves = S.method==='OPEX_FROM_BTC_AND_RESERVES';
+  const draw = isReserves ? S.rsvDraw : 0;
+  const topup = isReserves ? S.rsvTopup : 0;
+  const opexInv = REAL.fleetOpexTotal * share;
+  const opexFromBTC = opexInv - draw;
+  const opexFromBTC_btc = opexFromBTC / S.vwap;
+  const invBTC = REAL.fleetBTC * share;
+  const totFee = invBTC * (REAL.operatorFeeRate + REAL.adminFeeRate);
+  const netBTC = invBTC - opexFromBTC_btc - totFee;
+  const netUSD = netBTC * S.reportPrice;
+  const rsvClose = S.rsvOpen - draw + topup;
+  const netEco = netUSD - draw;
+
+  // Project-level data
+  document.getElementById('t_real').innerHTML =
+    row('Fleet BTC mined (period)', btc(REAL.fleetBTC)+' ₿', {c:'f2',t:'F2POOL'})+
+    row('Power cost (pre-tax)', usd(REAL.powerPre), {c:'ocr',t:'OCR'})+
+    row('Power tax', usd(REAL.powerTax), {c:'ocr',t:'OCR'})+
+    row('Power total (incl. tax)', '<b>'+usd(REAL.powerTotal)+'</b>', {c:'ocr',t:'OCR'})+
+    row('Hosting fee', usd(REAL.hostingFee), {c:'ocr',t:'OCR'})+
+    row('Equipment insurance', usd(REAL.insuranceFee), {c:'man',t:'MANUAL'})+
+    row('Custody fee', usd(REAL.custodyFee), {c:'man',t:'MANUAL'})+
+    row('Compliance / audit', usd(REAL.complianceFee), {c:'man',t:'MANUAL'})+
+    row('Total fleet opex', '<b>'+usd(REAL.fleetOpexTotal)+'</b>', {c:'calc',t:'CALC'})+
+    row('Period VWAP', usd(S.vwap,0), {c:'f2',t:'CME CF'})+
+    row('Reporting price', usd(S.reportPrice,0), {c:'man',t:'MANUAL'});
+
+  // Waterfall
+  document.getElementById('t_waterfall').innerHTML =
+    `<tr><td class="lbl">Gross BTC Mined (investor pool)</td><td class="pos">+${btc(invBTC)}</td><td class="pos">+${usd(invBTC*S.reportPrice)}</td></tr>`+
+    `<tr><td class="lbl">Opex from BTC (after $${fmt(draw)} reserve offset)</td><td class="neg">−${btc(opexFromBTC_btc)}</td><td class="neg">−${usd(opexFromBTC)}</td></tr>`+
+    `<tr><td class="lbl">Platform fees (10% of gross)</td><td class="neg">−${btc(totFee)}</td><td class="neg">−${usd(totFee*S.reportPrice)}</td></tr>`+
+    `<tr style="font-weight:700;background:var(--panel-2)"><td class="lbl">Net BTC to Investor</td><td class="pos">+${btc(netBTC)}</td><td class="pos">+${usd(netUSD)}</td></tr>`;
+
+  // Cash Reserves Ledger
+  document.getElementById('t_rsvledger').innerHTML =
+    `<tr><td class="lbl">Opening reserve balance</td><td>RSV-OB-2026-02</td><td>—</td><td>${usd(S.rsvOpen)}</td></tr>`+
+    `<tr><td class="lbl">Applied to operating costs</td><td>RSV-DRW-2026-02-001</td><td class="neg">−${usd(draw)}</td><td>${usd(S.rsvOpen-draw)}</td></tr>`+
+    `<tr><td class="lbl">Top-up from BTC deduction</td><td>RSV-TOP-2026-02-001</td><td class="pos">+${usd(topup)}</td><td>${usd(rsvClose)}</td></tr>`+
+    `<tr style="font-weight:700;background:var(--panel-2)"><td class="lbl">Closing reserve balance</td><td></td><td></td><td><b>${usd(rsvClose)}</b></td></tr>`;
+
+  // Opex split
+  document.getElementById('t_opexsplit').innerHTML =
+    `<tr><td class="lbl">Total pro-rata opex</td><td>${usd(opexInv)}</td><td>100%</td><td>—</td></tr>`+
+    `<tr><td class="lbl">├─ Funded from cash reserves</td><td>${usd(draw)}</td><td>${pct(draw/opexInv)}</td><td style="color:var(--green)">No BTC impact</td></tr>`+
+    `<tr><td class="lbl">└─ Funded from BTC deduction</td><td>${usd(opexFromBTC)}</td><td>${pct(opexFromBTC/opexInv)}</td><td>${btc(opexFromBTC_btc)} ₿ deducted</td></tr>`+
+    `<tr style="font-weight:700"><td class="lbl">Net Economic Return</td><td colspan="3">${usd(netEco)} (= Net BTC in USD ${usd(netUSD)} − Reserve draw ${usd(draw)})</td></tr>`;
+
+  // Formula mapping
+  document.getElementById('t_formulas').innerHTML =
+    `<tr><td class="lbl">Investor share</td><td>${S.units} ÷ ${S.pool} = ${pct(share)}</td></tr>`+
+    `<tr><td class="lbl">Investor BTC mined (gross)</td><td>${btc(REAL.fleetBTC)} × ${pct(share)} = ${btc(invBTC)} ₿</td></tr>`+
+    `<tr><td class="lbl">Total pro-rata opex</td><td>${usd(REAL.fleetOpexTotal)} × ${pct(share)} = ${usd(opexInv)}</td></tr>`+
+    `<tr><td class="lbl" style="color:var(--gold)">Opex from BTC (new v2)</td><td style="color:var(--gold)">${usd(opexInv)} − ${usd(draw)} (reserve offset) = ${usd(opexFromBTC)} → ${btc(opexFromBTC_btc)} ₿</td></tr>`+
+    `<tr><td class="lbl">Platform fees</td><td>${btc(invBTC)} × 10% = ${btc(totFee)} ₿</td></tr>`+
+    `<tr><td class="lbl" style="color:var(--gold)">Net BTC to Investor (new v2)</td><td style="color:var(--gold)">${btc(invBTC)} − ${btc(opexFromBTC_btc)} − ${btc(totFee)} = <b>${btc(netBTC)} ₿</b></td></tr>`+
+    `<tr><td class="lbl">Net Economic Return</td><td>${usd(netUSD)} − ${usd(draw)} = ${usd(netEco)}</td></tr>`;
+
+  // Validations
+  const vals = [
+    {id:'V001',name:'BTC continuity',pass:true,block:true,detail:`Opening (${btc(S.openBal)}) matches prior closing`},
+    {id:'V003',name:'Waterfall tie-out',pass:true,block:true,detail:`${btc(invBTC)} − ${btc(opexFromBTC_btc)} − ${btc(totFee)} = ${btc(netBTC)} ✓`},
+    {id:'V017',name:'Reserve continuity',pass:true,block:true,detail:`Opening $${fmt(S.rsvOpen)} matches prior closing`},
+    {id:'V018',name:'Reserve cap',pass:draw<=S.rsvOpen&&draw<=opexInv,block:true,detail:`Draw $${fmt(draw)} ≤ MIN($${fmt(S.rsvOpen)}, $${fmt(opexInv)}) ${draw<=S.rsvOpen&&draw<=opexInv?'✓':'✗'}`},
+    {id:'V019',name:'Mode consistency',pass:isReserves||draw===0,block:true,detail:`${S.method} → draw=${draw} ${(isReserves||draw===0)?'✓':'✗'}`},
+    {id:'V020',name:'Economic return invariance',pass:true,block:false,detail:`Net Economic Return ≈ counterfactual BTC_ONLY (within 1%)`},
+    {id:'V023',name:'Reserve runway',pass:draw===0||rsvClose/draw>=3,block:false,detail:`Runway ${draw>0?fmt(rsvClose/draw,1)+' months':'N/A'} ${(draw===0||rsvClose/draw>=3)?'✓':'⚠ < 3 months'}`},
+    {id:'V025',name:'Operator hashrate tie-out',pass:true,block:true,detail:'Operator vs F2Pool hashrate deviation 0.03% (limit 0.5%) ✓'},
+    {id:'V026',name:'BTC income tie-out',pass:true,block:true,detail:'Operator vs F2Pool BTC deviation 0.0001 ₿ (limit 0.001) ✓'},
+    {id:'V027',name:'Invoice presence',pass:S.billsLoaded,block:true,detail:S.billsLoaded?'Both invoices uploaded ✓':'Missing invoices ✗'},
+    {id:'V028',name:'Tokenest sync',pass:true,block:true,detail:'Investor data matches Tokenest current state ✓'},
+  ];
+
+  document.getElementById('vallist').innerHTML = vals.map(v=>{
+    const icon = v.pass ? (v.block?'✓':'⚠') : '✗';
+    const cls = v.pass ? (v.block?'pass':'warn') : 'fail';
+    return `<li><span class="vi ${cls}">${icon}</span><span class="vn">${v.id}</span><span class="vd">${v.name}</span><span class="vs">${v.detail}</span></li>`;
+  }).join('');
+
+  const blockers=vals.filter(v=>v.block&&!v.pass);
+  const warnings=vals.filter(v=>!v.block&&!v.pass);
+  const summaryDiv=document.getElementById('valSummary');
+  if(blockers.length>0){
+    summaryDiv.innerHTML=`<div class="banner err"><span class="bi">✗</span><div><b>${blockers.length} blocking validation(s) failed:</b> ${blockers.map(v=>v.id).join(', ')}. Cannot advance to READY_FOR_DISTRIBUTION.</div></div>`;
+    document.getElementById('b4next').disabled=true;
+  }else if(warnings.length>0){
+    summaryDiv.innerHTML=`<div class="banner warn"><span class="bi">⚠</span><div><b>${warnings.length} warning(s):</b> ${warnings.map(v=>v.id).join(', ')}. Review before publishing.</div></div>`;
+    document.getElementById('b4next').disabled=false;
+  }else{
+    summaryDiv.innerHTML=`<div class="banner ok"><span class="bi">✓</span><div><b>All validations passed.</b> Ready to generate statement.</div></div>`;
+    document.getElementById('b4next').disabled=false;
+  }
+
+  // Store for step 5
+  S._share=share; S._opexInv=opexInv; S._opexFromBTC=opexFromBTC; S._opexFromBTC_btc=opexFromBTC_btc;
+  S._invBTC=invBTC; S._totFee=totFee; S._netBTC=netBTC; S._netUSD=netUSD; S._rsvClose=rsvClose; S._netEco=netEco;
+}
+
+/* ======================== STEP 5 ======================== */
+function buildDocs(){
+  const share=S._share||S.units/S.pool;
+  const invBTC=S._invBTC;
+  const netBTC=S._netBTC;
+  const netUSD=S._netUSD;
+  const opexFromBTC=S._opexFromBTC;
+  const opexFromBTC_btc=S._opexFromBTC_btc;
+  const opexInv=S._opexInv;
+  const totFee=S._totFee;
+  const rsvClose=S._rsvClose;
+  const rsvDraw=S.rsvDraw;
+  const isReserves=S.method==='OPEX_FROM_BTC_AND_RESERVES';
+  const netEco=S._netEco;
+  const yieldM = netEco/S.totSub;
+  const yieldA = yieldM*12;
+  // YTD (simplified — assume 2 months)
+  const ytdYield = yieldM*2;
+  const itdBTC = 0.520000;
+  const itdUSD = 45348;
+  const itdYield = 0.1144;
+  const closing=S.openBal+invBTC-opexFromBTC_btc-totFee-S.wdr;
+  const closingUSD=closing*S.reportPrice;
+
+  // === CLIENT SUMMARY ===
+  document.getElementById('docClient').innerHTML=`
+   <div class="dhead">
+     <div class="dlogo"><div class="m">T</div><b>TKD GROUP</b></div>
+     <div class="dtitle"><h2>MONTHLY MINING STATEMENT · SUMMARY</h2>
+       <p>Statement ${S.stmtNo} · v1 (FINAL)</p><p>Period ${S.month} (${S.days} days)</p></div>
+   </div>
+   <div class="meta">
+     <div><small>Investor / Entity</small><b>${S.investor}</b></div>
+     <div><small>Account ID</small><b>${S.invId}</b></div>
+     <div><small>Subscription</small><b>SA-2024-0047 · ${S.units} Units</b></div>
+     <div><small>BTC Wallet</small><b>${S.wallet}</b></div>
+   </div>
+
+   <div class="sec">Executive Snapshot</div>
+   <div class="kpi" style="grid-template-columns:repeat(4,1fr);margin-top:8px">
+     <div class="b">
+       <small>NET BTC DISTRIBUTED (MONTH)</small>
+       <div>${btc(netBTC)} ₿</div>
+       <div class="sub">≈ ${usd(netUSD)}</div>
+       <div class="delta up">▲ 8.0% vs Jan 2026</div>
+     </div>
+     <div class="b">
+       <small>NET YIELD (MONTH / ANN.)</small>
+       <div>${pct(yieldM)} / ${pct(yieldA)}</div>
+       <div class="sub">Net economic · on ${usd(S.totSub,0)} total capital</div>
+       <div class="delta">YTD: ${pct(ytdYield)}</div>
+     </div>
+     <div class="b">
+       <small>ITD NET DISTRIBUTED</small>
+       <div>${btc(itdBTC)} ₿</div>
+       <div class="sub">≈ ${usd(itdUSD)} at avg realized price</div>
+       <div class="delta">ITD net yield: ${pct(itdYield)} (since 12 mo)</div>
+     </div>
+     <div class="b">
+       <small>CLOSING BALANCES</small>
+       <div>${btc(closing)} ₿</div>
+       <div class="sub">BTC wallet · ≈ ${usd(closingUSD)}</div>
+       <div class="sub">${usd(rsvClose)} Cash reserves <span class="gold-star">*</span></div>
+     </div>
+   </div>
+
+   <div class="sec">Account Activity — BTC Ledger</div>
+   <table>
+     <tr><td class="lab">28 Feb 2026</td><td class="lab">Investor BTC mined (gross, pro-rata)</td><td class="r pos">+${btc(invBTC)}</td><td class="r">+${usd(invBTC*S.reportPrice)}</td></tr>
+     <tr><td class="lab">28 Feb 2026</td><td class="lab">Operating costs from BTC (after $${fmt(rsvDraw)} reserve offset)</td><td class="r neg">−${btc(opexFromBTC_btc)}</td><td class="r neg">−${usd(opexFromBTC)}</td></tr>
+     <tr><td class="lab">28 Feb 2026</td><td class="lab">Platform fees deducted (10% of gross BTC)</td><td class="r neg">−${btc(totFee)}</td><td class="r neg">−${usd(totFee*S.reportPrice)}</td></tr>
+     <tr><td class="lab">28 Feb 2026</td><td class="lab">Investor withdrawal (TX 4e9a7c…b21d)</td><td class="r neg">−${btc(S.wdr)}</td><td class="r neg">−${usd(S.wdr*S.reportPrice)}</td></tr>
+     <tr class="totl"><td colspan="2">Closing BTC Balance — 28 February 2026</td><td class="r">${btc(closing)} ₿</td><td class="r">≈ ${usd(closingUSD)}</td></tr>
+   </table>
+   ${isReserves?`<div style="font-size:10px;color:#888;margin-top:10px;font-family:var(--sans)"><span class="gold-star">*</span> Includes $${fmt(rsvDraw)} of pro-rata opex funded from reserves this period (closing reserve: ${usd(rsvClose)} of ${usd(S.cashInit)} inception). Full Cash Reserves Ledger and term-sheet methodology in the companion Data Appendix.</div>`:''}
+   <div class="docfoot"><span>TKD Group · tkdgroup.sg · 138 Market Street #05-01/02, CapitaGreen, Singapore 048946</span><span>Page 1 of 1 · Private & Confidential</span></div>`;
+
+  // === APPENDIX PAGE 1 ===
+  const momUp = (REAL.uptime-REAL.uptimePrior)*100;
+  const momDiff = (REAL.networkDiff-REAL.diffPrior)/REAL.diffPrior*100;
+  const momHP = (REAL.hashprice-REAL.hashpricePrior)/REAL.hashpricePrior*100;
+  document.getElementById('docApp1').innerHTML=`
+   <div class="dhead">
+     <div class="dlogo"><div class="m">T</div><b>TKD GROUP</b></div>
+     <div class="dtitle"><h2>DATA APPENDIX · ${S.stmtNo}-A</h2>
+       <p>Statement ${S.stmtNo} · v1 (FINAL)</p><p>Period ${S.month} (${S.days} days)</p></div>
+   </div>
+   <div class="meta">
+     <div><small>Investor / Entity</small><b>${S.investor}</b></div>
+     <div><small>Account ID</small><b>${S.invId}</b></div>
+     <div><small>Subscription</small><b>SA-2024-0047 · ${S.units} Units</b></div>
+     <div><small>BTC Wallet</small><b>${S.wallet}</b></div>
+   </div>
+
+   <div class="sec">Period Performance Snapshot</div>
+   <div class="kpi" style="grid-template-columns:repeat(4,1fr);margin-top:8px">
+     <div class="b"><small>FLEET UPTIME (PERIOD)</small><div>${pct(REAL.uptime)}</div><div class="sub">${fmt(REAL.uptime*24,2)} hrs/day avg</div><div class="delta ${momUp>=0?'up':'down'}">${momUp>=0?'▲':'▼'} ${fmt(Math.abs(momUp),1)} pp vs Jan</div></div>
+     <div class="b"><small>TOTAL FLEET BTC MINED</small><div>${btc(REAL.fleetBTC)} ₿</div><div class="sub">Gross fleet, ${S.days}-day period</div><div class="sub">Investor pro-rata: ${btc(invBTC)} ₿</div></div>
+     <div class="b"><small>NETWORK DIFFICULTY (AVG)</small><div>${fmt(REAL.networkDiff,1)} T</div><div class="sub">Period average</div><div class="delta ${momDiff<=0?'up':'down'}" style="color:${momDiff<=0?'var(--green)':'var(--red)'}">${momDiff<=0?'▼':'▲'} ${fmt(Math.abs(momDiff),1)}% vs Jan</div></div>
+     <div class="b"><small>REALIZED HASHPRICE</small><div>$${fmt(REAL.hashprice,4)}</div><div class="sub">USD / TH / day</div><div class="delta ${momHP>=0?'up':'down'}">${momHP>=0?'▲':'▼'} ${fmt(Math.abs(momHP),1)}% vs Jan</div></div>
+   </div>
+
+   <div class="sec">A1 — Account Statement (Full) · BTC Ledger</div>
+   <table>
+     <tr><td class="lab">01 Feb 2026</td><td class="lab">OB-2026-02</td><td class="lab">Opening balance</td><td class="r">—</td><td class="r">${btc(S.openBal)}</td></tr>
+     <tr><td class="lab">28 Feb 2026</td><td class="lab">MNG-2026-02-001</td><td class="lab">BTC mined (${S.units}/${S.pool} pro-rata)</td><td class="r pos">+${btc(invBTC)}</td><td class="r">${btc(S.openBal+invBTC)}</td></tr>
+     <tr><td class="lab">28 Feb 2026</td><td class="lab">OPC-2026-02-001</td><td class="lab">Opex from BTC (after $${fmt(rsvDraw)} reserve offset)</td><td class="r neg">−${btc(opexFromBTC_btc)}</td><td class="r">${btc(S.openBal+invBTC-opexFromBTC_btc)}</td></tr>
+     <tr><td class="lab">28 Feb 2026</td><td class="lab">FEE-2026-02-001</td><td class="lab">Platform fees (6%+4%=10%)</td><td class="r neg">−${btc(totFee)}</td><td class="r">${btc(S.openBal+invBTC-opexFromBTC_btc-totFee)}</td></tr>
+     <tr><td class="lab">28 Feb 2026</td><td class="lab">WDR-2026-02-001</td><td class="lab">Withdrawal to ${S.wallet}</td><td class="r neg">−${btc(S.wdr)}</td><td class="r">${btc(closing)}</td></tr>
+     <tr class="totl"><td colspan="4">Closing BTC Balance — 28 February 2026</td><td class="r">${btc(closing)} ₿ ≈ ${usd(closingUSD)}</td></tr>
+   </table>
+   ${isReserves?`
+   <div class="sec">Cash Reserves Ledger</div>
+   <table>
+     <tr><td class="lab">01 Feb 2026</td><td class="lab">RSV-OB-2026-02</td><td class="lab">Opening reserve balance</td><td class="r">—</td><td class="r">${usd(S.rsvOpen)}</td></tr>
+     <tr><td class="lab">28 Feb 2026</td><td class="lab">RSV-DRW-2026-02-001</td><td class="lab">Applied to operating costs</td><td class="r neg">−${usd(rsvDraw)}</td><td class="r">${usd(S.rsvOpen-rsvDraw)}</td></tr>
+     <tr><td class="lab">28 Feb 2026</td><td class="lab">RSV-TOP-2026-02-001</td><td class="lab">Top-up from BTC deduction (none)</td><td class="r">$0.00</td><td class="r">${usd(rsvClose)}</td></tr>
+     <tr class="totl"><td colspan="4">Closing Reserve Balance — 28 February 2026</td><td class="r">${usd(rsvClose)}</td></tr>
+   </table>
+   <div style="font-size:10px;color:#888;margin-top:8px;font-family:var(--sans)">Inception reserve: ${usd(S.cashInit)}. Drawn ITD: $17,500.00. Top-ups ITD: $0.00.</div>
+   `:''}
+   <div class="docfoot"><span>TKD Group · tkdgroup.sg · 138 Market Street #05-01/02, CapitaGreen, Singapore 048946</span><span>Page 1 of 5 · Private & Confidential</span></div>`;
+
+  // === APPENDIX PAGE 2 — EARNINGS WATERFALL ===
+  document.getElementById('docApp2').innerHTML=`
+   <div class="dhead">
+     <div class="dlogo"><div class="m">T</div><b>TKD GROUP</b></div>
+     <div class="dtitle"><h2>EARNINGS WATERFALL · FLEET &amp; COST DETAIL</h2><p>Statement ${S.stmtNo} · v1 (FINAL)</p></div>
+   </div>
+   <div class="sec">A2 — Earnings Waterfall</div>
+   <div style="font-size:10px;color:#888;margin-bottom:10px;font-family:var(--sans)">Pro-rata: ${S.units} of ${S.pool} units (${pct(share)}). USD at period VWAP of ${usd(S.vwap,0)}/BTC. ${isReserves?'Opex shown = BTC-funded portion only. See Opex Funding box below.':''}</div>
+   <table>
+     <tr><td class="lab">Gross BTC Mined (investor pool)</td><td class="basis">${S.units}/${S.pool} × ${btc(REAL.fleetBTC)}</td><td class="r pos">+${btc(invBTC)}</td><td class="r pos">+${usd(invBTC*S.reportPrice)}</td></tr>
+     <tr><td class="lab">Less: Operating costs (BTC-funded${isReserves?', after $${fmt(rsvDraw)} reserve offset':''})</td><td class="basis">${isReserves?usd(opexInv)+' − '+usd(rsvDraw)+' = '+usd(opexFromBTC):usd(opexInv)} ÷ ${usd(S.vwap,0)}</td><td class="r neg">−${btc(opexFromBTC_btc)}</td><td class="r neg">−${usd(opexFromBTC)}</td></tr>
+     <tr class="subt"><td>Net BTC after operating costs</td><td></td><td class="r">+${btc(invBTC-opexFromBTC_btc)}</td><td class="r">+${usd((invBTC-opexFromBTC_btc)*S.reportPrice)}</td></tr>
+     <tr><td class="lab">Operator Fee (${pct(REAL.operatorFeeRate)})</td><td class="basis">${pct(REAL.operatorFeeRate)} × ${btc(invBTC)}</td><td class="r neg">−${btc(invBTC*REAL.operatorFeeRate)}</td><td class="r neg">−${usd(invBTC*REAL.operatorFeeRate*S.reportPrice)}</td></tr>
+     <tr><td class="lab">Admin Fee (${pct(REAL.adminFeeRate)})</td><td class="basis">${pct(REAL.adminFeeRate)} × ${btc(invBTC)}</td><td class="r neg">−${btc(invBTC*REAL.adminFeeRate)}</td><td class="r neg">−${usd(invBTC*REAL.adminFeeRate*S.reportPrice)}</td></tr>
+     <tr class="subt"><td>Total Platform Fees (10%)</td><td></td><td class="r neg">−${btc(totFee)}</td><td class="r neg">−${usd(totFee*S.reportPrice)}</td></tr>
+     <tr class="totl"><td>Net BTC to Investor</td><td></td><td class="r pos">+${btc(netBTC)}</td><td class="r pos">+${usd(netUSD)}</td></tr>
+   </table>
+   ${isReserves?`
+   <div class="sec">Opex Funding This Period — USD Only</div>
+   <table>
+     <tr><td class="lab">Pro-rata opex (total)</td><td class="lab">Funded from cash reserves</td><td class="lab">Funded from BTC (ties to waterfall)</td><td class="lab">Net Economic Return*</td></tr>
+     <tr><td class="r">${usd(opexInv)}</td><td class="r">${usd(rsvDraw)} (${pct(rsvDraw/opexInv)})</td><td class="r">${usd(opexFromBTC)} (${pct(opexFromBTC/opexInv)})</td><td class="r">${usd(netEco)}</td></tr>
+   </table>
+   <div style="font-size:10px;color:#888;margin-top:6px;font-family:var(--sans)">* Net Economic Return = Net BTC distributed in USD (${usd(netUSD)}) − reserve drawdown (${usd(rsvDraw)}). The reserve-funded portion is a USD-only movement against the Cash Reserves Ledger.</div>
+   `:''}
+   <div class="docfoot"><span>TKD Group · tkdgroup.sg</span><span>Page 2 of 5 · Private & Confidential</span></div>`;
+
+  // === APPENDIX PAGE 3 — OPERATING COSTS ===
+  const kWh = REAL.fleetMW*1000*REAL.uptime*24*S.days;
+  document.getElementById('docApp3').innerHTML=`
+   <div class="dhead">
+     <div class="dlogo"><div class="m">T</div><b>TKD GROUP</b></div>
+     <div class="dtitle"><h2>OPERATING COSTS</h2><p>Statement ${S.stmtNo} · v1 (FINAL)</p></div>
+   </div>
+   <div class="sec">A3 — Operating Costs · Cost Reconciliation</div>
+   <table>
+     <tr><td class="lab" colspan="2" style="font-weight:700">Power &amp; Hosting</td></tr>
+     <tr><td class="lab">Total kWh Consumed</td><td class="r">${fmt(REAL.fleetMW,2)} MW × ${fmt(REAL.uptime*24,2)} h × ${S.days} days = ${fmt(kWh,1)} kWh</td></tr>
+     <tr><td class="lab">Power Cost (pre-tax)</td><td class="r">${fmt(kWh,1)} kWh × $0.06/kWh = ${usd(REAL.powerPre)}</td></tr>
+     <tr><td class="lab">Power Tax (14.9%)</td><td class="r">${usd(REAL.powerPre)} × 14.9% = ${usd(REAL.powerTax)}</td></tr>
+     <tr><td class="lab">Hosting Fee</td><td class="r">${fmt(kWh,1)} kWh × $0.02/kWh = ${usd(REAL.hostingFee)}</td></tr>
+     <tr class="subt"><td>Subtotal — Power &amp; Hosting</td><td class="r">${usd(REAL.phSub)}</td></tr>
+     <tr><td class="lab" colspan="2" style="font-weight:700;padding-top:8px">Fixed Operating Costs</td></tr>
+     <tr><td class="lab">Equipment Insurance</td><td class="r">900 × $4,267 × 1.1% p.a. ÷ 12 = ${usd(REAL.insuranceFee)} · Lloyd's syndicate</td></tr>
+     <tr><td class="lab">Custody Fee</td><td class="r">$1,500/mo · BitGo Trust = ${usd(REAL.custodyFee)}</td></tr>
+     <tr><td class="lab">Compliance / Annual Audit</td><td class="r">$15,000 p.a. ÷ 12 = ${usd(REAL.complianceFee)} · KPMG Singapore</td></tr>
+     <tr><td class="lab">Repairs &amp; Maintenance</td><td class="r">Within warranty — ${usd(REAL.repairsFee)}</td></tr>
+     <tr class="subt"><td>Subtotal — Fixed</td><td class="r">${usd(REAL.fixedOpexSub)}</td></tr>
+     <tr class="totl"><td>Total Operating Costs (Fleet)</td><td class="r">${usd(REAL.fleetOpexTotal)}</td></tr>
+     <tr><td class="lab">Investor pro-rata share (${pct(share)})</td><td class="r">${usd(opexInv)}</td></tr>
+     ${isReserves?`<tr><td class="lab">Of which: funded from cash reserves / BTC deduction</td><td class="r">${usd(rsvDraw)} / ${usd(opexFromBTC)}</td></tr>`:''}
+   </table>
+   <div class="docfoot"><span>TKD Group · tkdgroup.sg</span><span>Page 3 of 5 · Private & Confidential</span></div>`;
+
+  S._closing=closing; S._netBTC=netBTC; S._netUSD=netUSD;
+}
+
+/* ======================== PUBLISH ======================== */
+function pickSched(el){
+  document.querySelectorAll('#schedRow .radio-card').forEach(c=>c.classList.remove('sel'));
+  el.classList.add('sel'); S.sched=el.dataset.sched;
+  document.getElementById('schedDate').classList.toggle('hide', S.sched!=='schedule');
+  const lbl={now:'Publish statement',schedule:'Schedule statement',draft:'Save draft'};
+  document.getElementById('publishBtn').textContent=lbl[S.sched];
+}
+function askPublish(){
+  if(S.sched==='draft'){ doToast('Saved as draft · not released'); return; }
+  document.getElementById('modalsum').innerHTML=`
+    <div class="row"><span>Investor</span><b>${S.investor} · ${S.invId}</b></div>
+    <div class="row"><span>Period</span><b>${S.month}</b></div>
+    <div class="row"><span>Mode</span><b>${S.method==='OPEX_FROM_BTC_AND_RESERVES'?'BTC + Reserves':'BTC Only'}</b></div>
+    <div class="row"><span>Reserve draw</span><b>${usd(S.rsvDraw)}</b></div>
+    <div class="row"><span>Net BTC to investor</span><b>${btc(S._netBTC)} BTC (≈ ${usd(S._netUSD)})</b></div>
+    <div class="row"><span>Closing BTC balance</span><b>${btc(S._closing)} BTC</b></div>
+    <div class="row"><span>Closing reserve</span><b>${usd(S._rsvClose||0)}</b></div>
+    <div class="row"><span>Release</span><b>${S.sched==='now'?'Immediately':document.getElementById('f_sched').value.replace('T',' ')}</b></div>`;
+  document.getElementById('modal').classList.remove('hide');
+}
+function closeModal(){document.getElementById('modal').classList.add('hide');}
+function confirmPublish(){
+  closeModal();
+  doToast(S.sched==='now'?'✓ Statement published to investor portal & email':'✓ Statement scheduled for release');
+}
+function doToast(msg){
+  const t=document.getElementById('toast');t.textContent=msg;t.classList.remove('hide');
+  setTimeout(()=>t.classList.add('hide'),2600);
+}
+
+/* ======================== INIT ======================== */
+syncSetup();
+</script>
+</body>
+</html>

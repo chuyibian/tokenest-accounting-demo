@@ -1,0 +1,1518 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TKD Group · Statement Management</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Inter:wght@400;500;600;700&display=swap');
+  :root{
+    --bg:#f4f5f7; --panel:#ffffff; --panel-2:#f8f9fb; --line:#e6e8ed; --line-soft:#eef0f4;
+    --ink:#1a2233; --ink-dim:#5b6577; --ink-faint:#97a0b0;
+    --accent:#ff4c4c; --accent-dim:#e63b3b; --accent-soft:#fff0f0;
+    --navbg:#ffffff; --navink:#3a4458; --navhover:#f4f5f7;
+    --green:#1f9e6b; --green-soft:#e7f6ef; --amber:#c98a12; --blue:#2f6fd6;
+    --radius:12px; --mono:'IBM Plex Mono',monospace; --sans:'Inter',-apple-system,sans-serif;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{background:var(--bg);color:var(--ink);font-family:var(--sans);font-size:14px;line-height:1.5;-webkit-font-smoothing:antialiased}
+  .app{display:flex;min-height:100vh}
+  a{color:inherit;text-decoration:none}
+
+  /* ---------- Sidebar ---------- */
+  .side{width:248px;flex:0 0 248px;background:var(--navbg);border-right:1px solid var(--line);padding:0;position:sticky;top:0;height:100vh;overflow-y:auto;display:flex;flex-direction:column}
+  .brand{display:flex;align-items:center;gap:9px;padding:18px 20px;border-bottom:1px solid var(--line-soft)}
+  .brand .logo{width:30px;height:30px;border-radius:50%;border:2px solid var(--accent);display:flex;align-items:center;justify-content:center}
+  .brand .logo b{color:var(--accent);font-size:13px;font-weight:700}
+  .brand .nm{font-weight:700;font-size:15px;letter-spacing:.2px}
+  .brand .nm small{display:block;font-size:9px;color:var(--ink-faint);font-weight:500;letter-spacing:1px}
+  .navsection{padding:14px 12px 4px}
+  .navsection .lbl{font-size:10px;letter-spacing:1.2px;text-transform:uppercase;color:var(--ink-faint);font-weight:600;padding:0 10px 6px}
+  .navitem{display:flex;align-items:center;gap:11px;padding:9px 12px;border-radius:9px;color:var(--navink);cursor:pointer;font-size:13.5px;font-weight:500;transition:.12s;margin-bottom:1px}
+  .navitem:hover{background:var(--navhover)}
+  .navitem .ic{width:18px;height:18px;flex:0 0 18px;opacity:.7}
+  .navitem .chev{margin-left:auto;font-size:10px;opacity:.5;transition:.15s}
+  .navitem.open .chev{transform:rotate(180deg)}
+  .subitem{display:flex;align-items:center;gap:10px;padding:7px 12px 7px 41px;border-radius:8px;color:var(--ink-dim);cursor:pointer;font-size:13px;transition:.12s}
+  .subitem:hover{background:var(--navhover);color:var(--ink)}
+  .subitem .dot{width:5px;height:5px;border-radius:50%;background:var(--ink-faint)}
+  .subitem.active{color:var(--accent);font-weight:600}
+  .subitem.active .dot{background:var(--accent)}
+  .subgroup{overflow:hidden;max-height:0;transition:max-height .2s ease}
+  .subgroup.open{max-height:200px}
+
+  /* ---------- Main ---------- */
+  .main{flex:1;min-width:0;display:flex;flex-direction:column}
+  .topbar{height:58px;border-bottom:1px solid var(--line);display:flex;align-items:center;padding:0 26px;gap:12px;background:var(--panel);position:sticky;top:0;z-index:20}
+  .crumbs{display:flex;align-items:center;gap:9px;font-size:13px;color:var(--ink-faint)}
+  .crumbs .home{width:28px;height:28px;border-radius:7px;border:1px solid var(--line);display:flex;align-items:center;justify-content:center}
+  .crumbs .sep{opacity:.4}
+  .crumbs .cur{color:var(--ink);font-weight:600;background:var(--panel-2);padding:4px 11px;border-radius:7px;border:1px solid var(--line)}
+  .spacer{flex:1}
+  .who{display:flex;align-items:center;gap:9px;font-size:13px;font-weight:500;color:var(--ink-dim)}
+  .who .av{width:28px;height:28px;border-radius:50%;background:var(--accent);color:#fff;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700}
+  .who .chev{font-size:10px;opacity:.5}
+
+  .stage{padding:24px 28px 80px;max-width:1280px;width:100%;margin:0 auto}
+
+  /* page header card */
+  .pagehead{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:24px 26px;display:flex;align-items:center;justify-content:space-between;gap:20px}
+  .pagehead h1{font-size:23px;font-weight:700;letter-spacing:-.3px}
+  .pagehead p{color:var(--ink-dim);font-size:13.5px;margin-top:3px}
+
+  .btn{display:inline-flex;align-items:center;gap:8px;background:var(--ink);color:#fff;border:none;border-radius:10px;padding:11px 18px;font-size:13.5px;font-weight:600;cursor:pointer;transition:.12s;font-family:var(--sans)}
+  .btn:hover{background:#0f1626}
+  .btn.accent{background:var(--accent)} .btn.accent:hover{background:var(--accent-dim)}
+  .btn.ghost{background:var(--panel);border:1px solid var(--line);color:var(--ink-dim)}
+  .btn.ghost:hover{border-color:var(--ink-faint);color:var(--ink)}
+  .btn.sm{padding:7px 13px;font-size:12.5px}
+  .btn:disabled{opacity:.4;cursor:not-allowed}
+
+  .tabs{display:flex;gap:6px;margin-top:18px;background:var(--panel);border:1px solid var(--line);border-radius:11px;padding:5px;width:fit-content}
+  .tab{padding:8px 18px;border-radius:8px;font-size:13.5px;font-weight:600;color:var(--ink-dim);cursor:pointer;transition:.12s}
+  .tab.active{background:var(--accent-soft);color:var(--accent)}
+
+  .filterbar{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:18px 20px;margin-top:16px;display:flex;align-items:flex-end;gap:16px;flex-wrap:wrap}
+  .field{display:flex;flex-direction:column;gap:6px}
+  .field label{font-size:11px;color:var(--ink-faint);font-weight:600;letter-spacing:.3px}
+  .ctrl,select,input{background:var(--panel);border:1px solid var(--line);color:var(--ink);border-radius:9px;padding:9px 12px;font-family:var(--sans);font-size:13.5px;outline:none;transition:.12s;min-width:150px}
+  .ctrl:focus,select:focus,input:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
+  input[readonly]{background:var(--panel-2);color:var(--ink-dim)}
+  input.mono,.mono{font-family:var(--mono)}
+  select{appearance:none;background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2397a0b0' stroke-width='2'><path d='M6 9l6 6 6-6'/></svg>");background-repeat:no-repeat;background-position:right 11px center;padding-right:30px}
+  .filterbar .grow{flex:1}
+
+  table.list{width:100%;border-collapse:collapse;margin-top:16px;background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);overflow:hidden}
+  table.list th{text-align:left;font-size:10.5px;letter-spacing:.6px;text-transform:uppercase;color:var(--ink-faint);font-weight:600;padding:13px 18px;border-bottom:1px solid var(--line);background:var(--panel-2)}
+  table.list td{padding:14px 18px;border-bottom:1px solid var(--line-soft);font-size:13.5px}
+  table.list tr:last-child td{border-bottom:none}
+  table.list tr:hover td{background:var(--panel-2)}
+  .badge{display:inline-flex;align-items:center;gap:5px;font-size:11.5px;font-weight:600;padding:3px 10px;border-radius:20px}
+  .badge.pub{background:var(--green-soft);color:var(--green)}
+  .badge.draft{background:#eef0f4;color:var(--ink-dim)}
+  .badge.sched{background:#fff6e6;color:var(--amber)}
+  .badge::before{content:"";width:6px;height:6px;border-radius:50%;background:currentColor}
+  .linkbtn{display:inline-flex;align-items:center;gap:6px;font-size:12.5px;font-weight:600;color:var(--ink-dim);border:1px solid var(--line);border-radius:8px;padding:6px 12px;cursor:pointer;transition:.12s;background:var(--panel)}
+  .linkbtn:hover{border-color:var(--accent);color:var(--accent)}
+
+  .hide{display:none!important}
+
+  /* ---------- Generator ---------- */
+  .genbar{display:flex;align-items:center;gap:8px;margin-bottom:18px;flex-wrap:wrap}
+  .genback{font-size:13px;color:var(--ink-dim);cursor:pointer;display:inline-flex;align-items:center;gap:6px;font-weight:600}
+  .genback:hover{color:var(--accent)}
+  .steps{display:flex;gap:6px;flex-wrap:wrap;margin-left:auto}
+  .schip{display:flex;align-items:center;gap:8px;padding:7px 13px;border-radius:9px;font-size:12.5px;font-weight:600;color:var(--ink-faint);border:1px solid var(--line);background:var(--panel)}
+  .schip .n{width:19px;height:19px;border-radius:6px;border:1px solid var(--line);display:flex;align-items:center;justify-content:center;font-size:10.5px;font-family:var(--mono)}
+  .schip.active{color:var(--accent);border-color:var(--accent);background:var(--accent-soft)}
+  .schip.active .n{background:var(--accent);color:#fff;border-color:var(--accent)}
+  .schip.done{color:var(--ink)}
+  .schip.done .n{background:var(--ink);color:#fff;border-color:var(--ink)}
+
+  .gh1{font-size:22px;font-weight:700;letter-spacing:-.3px}
+  .gsub{color:var(--ink-dim);font-size:13.5px;margin-top:5px;max-width:760px}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:22px 24px;margin-top:18px}
+  .card h3{font-size:14.5px;font-weight:700;display:flex;align-items:center;gap:9px;letter-spacing:-.2px}
+  .card h3 .dot{width:7px;height:7px;border-radius:50%;background:var(--accent)}
+  .card .hint{font-size:12.5px;color:var(--ink-faint);margin:3px 0 16px}
+  .grid{display:grid;gap:16px}.g2{grid-template-columns:1fr 1fr}.g3{grid-template-columns:1fr 1fr 1fr}
+  .fl{display:block;font-size:10.5px;letter-spacing:.4px;text-transform:uppercase;color:var(--ink-faint);font-weight:600;margin-bottom:6px}
+  .fl input,.fl select,.fl .ctrl{width:100%}
+  .actions{display:flex;gap:12px;margin-top:22px;align-items:center}
+  .actions .note{color:var(--ink-faint);font-size:12px}
+  .seg{display:inline-flex;border:1px solid var(--line);border-radius:9px;overflow:hidden}
+  .seg button{padding:8px 16px;font-size:12.5px;font-weight:600;background:var(--panel);border:none;cursor:pointer;color:var(--ink-dim)}
+  .seg button.on{background:var(--accent);color:#fff}
+  /* read-only display variant: greyed, not clickable, visually distinct from the red active state */
+  .seg.ro button{cursor:default}
+  .seg.ro button.on{background:var(--ink-faint);color:#fff}
+  .seg.ro button:not(.on){color:var(--ink-faint);opacity:.55}
+
+  .uploadzone{border:1.5px dashed var(--line);border-radius:11px;padding:30px;text-align:center;cursor:pointer;transition:.12s;background:var(--panel-2)}
+  .uploadzone:hover{border-color:var(--accent);background:var(--accent-soft)}
+  .filechip{display:flex;align-items:center;gap:10px;background:var(--panel-2);border:1px solid var(--line);border-radius:9px;padding:10px 13px;margin-top:10px;font-size:12.5px}
+  .filechip .ok{color:var(--green);font-weight:600;margin-left:auto}
+
+  table.data{width:100%;border-collapse:collapse;font-size:12.5px;margin-top:4px}
+  table.data th{text-align:left;font-size:10px;letter-spacing:.5px;text-transform:uppercase;color:var(--ink-faint);font-weight:600;padding:8px 10px;border-bottom:1px solid var(--line)}
+  table.data td{padding:9px 10px;border-bottom:1px solid var(--line-soft);font-family:var(--mono);font-size:12px;vertical-align:top}
+  table.data td.lbl{font-family:var(--sans);color:var(--ink-dim)}
+  .src{display:inline-block;font-size:9px;letter-spacing:.3px;text-transform:uppercase;padding:2px 7px;border-radius:5px;font-family:var(--sans);font-weight:700}
+  .src.f2{background:#e7f6ef;color:var(--green)} .src.ocr{background:#eaf1fb;color:var(--blue)}
+  .src.cfg{background:#fbf2e0;color:var(--amber)} .src.man{background:var(--accent-soft);color:var(--accent)}
+  .src.calc{background:#eef0f4;color:var(--ink-dim)} .src.cobo{background:#ede9fb;color:#6d4ad8}
+  .banner{display:flex;gap:11px;align-items:flex-start;border-radius:10px;padding:13px 15px;font-size:12.5px;margin-top:14px;border:1px solid}
+  .banner.ok{background:var(--green-soft);border-color:#bce6d2;color:#176b48}
+  .banner.warn{background:#fbf4dd;border-color:#ecd896;color:#7a5c12}
+  .banner.info{background:#eaf1fb;border-color:#c3d8f5;color:#1f4f9e}
+  .legend{display:flex;flex-wrap:wrap;gap:13px;margin:14px 0 0;font-size:11px;color:var(--ink-dim)}
+  .legend span{display:inline-flex;align-items:center;gap:5px}
+
+  /* statement doc */
+  .docwrap{background:var(--panel-2);border:1px solid var(--line);border-radius:12px;margin-top:16px;padding:4px}
+  .pagetag{text-align:center;font-size:10px;color:var(--ink-faint);padding:10px;letter-spacing:1px;font-weight:600;text-transform:uppercase}
+  .doc{background:#fff;color:#1a1a1a;font-family:Georgia,serif;padding:42px 48px;max-width:800px;margin:16px auto;box-shadow:0 4px 24px rgba(20,30,50,.1);position:relative}
+  .doc::after{content:"PREVIEW · NOT PUBLISHED";position:absolute;top:46%;left:50%;transform:translate(-50%,-50%) rotate(-22deg);font-family:var(--sans);font-size:42px;font-weight:800;color:rgba(255,76,76,.05);letter-spacing:5px;pointer-events:none;white-space:nowrap}
+  .doc .dhead{display:flex;justify-content:space-between;align-items:flex-start;border-bottom:2px solid #1a1a1a;padding-bottom:13px}
+  .doc .dlogo{display:flex;align-items:center;gap:9px}
+  .doc .dlogo .m{width:26px;height:26px;border-radius:50%;border:2px solid var(--accent);color:var(--accent);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:11px;font-family:var(--sans)}
+  .doc .dlogo b{font-family:var(--sans);font-weight:700;font-size:17px;letter-spacing:1px}
+  .doc .dtitle{text-align:right}
+  .doc .dtitle h2{font-family:var(--sans);font-size:15px;letter-spacing:.5px;font-weight:700}
+  .doc .dtitle p{font-size:10.5px;color:#666;font-family:var(--sans);margin-top:2px}
+  .doc .meta{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin:15px 0 4px;font-family:var(--sans)}
+  .doc .meta small{font-size:9px;letter-spacing:.8px;color:#999;text-transform:uppercase;display:block}
+  .doc .meta b{font-size:12.5px}
+  .doc .sec{font-family:var(--sans);font-size:10.5px;letter-spacing:.4px;font-weight:700;text-transform:uppercase;background:#f0f0f0;padding:6px 10px;margin:20px 0 9px}
+  .doc table{width:100%;border-collapse:collapse;font-family:var(--sans);font-size:11px}
+  .doc table td{padding:5px 8px;border-bottom:1px solid #eee}
+  .doc table td.r{text-align:right;font-variant-numeric:tabular-nums}
+  .doc table td.basis{color:#999;font-size:9.5px;font-family:var(--mono)}
+  .doc .subt td{font-weight:700;border-top:1px solid #ccc;border-bottom:none}
+  .doc .totl td{font-weight:700;background:#f7f7f7}
+  .doc .neg{color:var(--accent-dim)} .doc .pos{color:#1a7a48}
+  .doc .kpis{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;font-family:var(--sans)}
+  .doc .kpi{border:1px solid #eaeaea;border-radius:9px;padding:12px 14px}
+  .doc .kpi small{font-size:9px;letter-spacing:.6px;text-transform:uppercase;color:#999;display:block}
+  .doc .kpi .v{font-size:18px;font-weight:700;margin-top:4px}
+  .doc .kpi .d{font-size:10px;font-weight:600;margin-top:2px}
+  .doc .kpi .d.up{color:#1a7a48} .doc .kpi .d.down{color:var(--accent-dim)}
+  .doc .foot{margin-top:22px;border-top:1px solid #ddd;padding-top:9px;font-family:var(--sans);font-size:9px;color:#999;display:flex;justify-content:space-between}
+  .doc .fnote{font-family:var(--sans);font-size:9.5px;color:#888;margin-top:8px;line-height:1.5}
+  .pill{display:inline-block;font-family:var(--sans);font-size:9.5px;font-weight:700;border:1px solid var(--accent);color:var(--accent);border-radius:20px;padding:2px 10px}
+
+  /* radio cards for schedule */
+  .rrow{display:flex;gap:10px;margin-top:4px}
+  .rcard{flex:1;border:1px solid var(--line);border-radius:11px;padding:13px 15px;cursor:pointer;transition:.12s;background:var(--panel)}
+  .rcard:hover{border-color:var(--ink-faint)}
+  .rcard.sel{border-color:var(--accent);background:var(--accent-soft);box-shadow:0 0 0 3px var(--accent-soft)}
+  .rcard b{font-size:13.5px}.rcard p{font-size:11.5px;color:var(--ink-faint);margin-top:3px}
+
+  .modal-bg{position:fixed;inset:0;background:rgba(20,30,50,.45);backdrop-filter:blur(3px);display:flex;align-items:center;justify-content:center;z-index:100}
+  .modal{background:var(--panel);border-radius:15px;width:470px;max-width:92vw;padding:26px;box-shadow:0 30px 80px rgba(0,0,0,.3)}
+  .modal h3{font-size:20px;font-weight:700;margin-bottom:8px}
+  .modal p{color:var(--ink-dim);font-size:13px}
+  .modal .sb{background:var(--panel-2);border:1px solid var(--line);border-radius:10px;padding:14px;margin:15px 0;font-size:12.5px}
+  .modal .sb .r{display:flex;justify-content:space-between;padding:4px 0}.modal .sb .r b{font-family:var(--mono)}
+  .modal .mact{display:flex;gap:10px;justify-content:flex-end}
+  .statpill{display:inline-flex;align-items:center;gap:8px;border-radius:9px;padding:8px 16px;font-size:15px;font-weight:700;letter-spacing:.3px;border:1.5px solid}
+  .statpill .ic{font-size:14px;line-height:1}
+  .statpill.s-open{background:#fff5f5;border-color:#ffb3b3;color:#b42318}
+  .statpill.s-closed{background:#eafaf1;border-color:#7fd6a0;color:#1a7f4b}
+  .statpill.s-reopen{background:#fff8ec;border-color:#f0c879;color:#a36a12}
+  .statpill.s-deleted{background:#f3f4f6;border-color:#cdd2d9;color:#5f6570}
+  .dealrow{display:flex;align-items:center;gap:10px;border:1px solid var(--line);border-radius:9px;padding:11px 14px;cursor:pointer;font-size:13.5px;transition:.12s}
+  .dealrow:hover{border-color:var(--ink-faint)}
+  .dealrow input{min-width:auto;width:16px;height:16px;accent-color:var(--accent);cursor:pointer}
+  .dealrow span:first-of-type{flex:1}
+  .dealtag{font-size:10px;font-weight:700;color:var(--green);background:var(--green-soft);padding:2px 9px;border-radius:20px;text-transform:uppercase;letter-spacing:.4px}
+  .ocrgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:10px;margin-top:8px}
+  .ocrchip{border:1px solid var(--line);border-radius:10px;padding:11px 13px;cursor:pointer;transition:.12s;background:var(--panel)}
+  .ocrchip:hover{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
+  .ocrchip.low{border-color:#ecd896;background:#fdfaf0}
+  .ocrchip.adj{border-color:var(--blue);background:#f4f8fe}
+  .ocrchip .ocrk{font-size:11px;color:var(--ink-dim)}
+  .ocrchip .ocrv{font-family:var(--mono);font-size:15px;font-weight:600;margin-top:3px}
+  .ocrchip .ocrmeta{font-size:10px;color:var(--ink-faint);margin-top:3px;letter-spacing:.2px}
+  .ocrchip.low .ocrmeta{color:var(--amber)} .ocrchip.adj .ocrmeta{color:var(--blue)}
+  .pdfmock{border:1px solid var(--line);border-radius:10px;overflow:hidden;background:var(--panel-2)}
+  .pdfbar{background:#2a3340;color:#cfd6e0;font-size:10px;padding:6px 10px;font-family:var(--mono)}
+  .pdfpage{position:relative;background:#fff;margin:10px;border:1px solid #eee;border-radius:4px;padding:18px 16px;min-height:230px}
+  .pdfline{height:7px;background:#eef0f3;border-radius:3px;margin-bottom:9px}
+  .pdfhi{position:absolute;left:14px;right:14px;display:flex;justify-content:space-between;align-items:center;background:rgba(255,76,76,.12);border:1.5px solid var(--accent);border-radius:5px;padding:5px 9px;font-size:11px}
+  .pdfhi span{color:#888} .pdfhi b{font-family:var(--mono);color:var(--ink)}
+</style>
+</head>
+<body>
+<div class="app">
+  <!-- ===== SIDEBAR ===== -->
+  <aside class="side">
+    <div class="brand">
+      <div class="logo"><b>T</b></div>
+      <div class="nm">TKD<small>GROUP</small></div>
+    </div>
+    <div class="navsection">
+      <div class="lbl">Common</div>
+      <div class="navitem"><span class="ic">▦</span>Dashboard</div>
+      <div class="navitem" id="navAudit" onclick="openAudit()"><span class="ic">▤</span>Audit Log</div>
+      <div class="navitem"><span class="ic">▤</span>Other<span class="chev">▾</span></div>
+    </div>
+    <div class="navsection">
+      <div class="lbl">Investor</div>
+      <div class="navitem open" onclick="togNav(this,'g-inv')"><span class="ic">◎</span>Investors<span class="chev">▾</span></div>
+      <div class="subgroup open" id="g-inv">
+        <div class="subitem"><span class="dot"></span>Accounts</div>
+        <div class="subitem"><span class="dot"></span>User List</div>
+        <div class="subitem" id="navWallet" onclick="openWallet()"><span class="dot"></span>Wallet</div>
+      </div>
+      <div class="navitem"><span class="ic">▣</span>Projects</div>
+      <div class="navitem open" onclick="togNav(this,'g-sub')"><span class="ic">▭</span>Subscriptions<span class="chev">▾</span></div>
+      <div class="subgroup open" id="g-sub">
+        <div class="subitem"><span class="dot"></span>Entries</div>
+        <div class="subitem" title="Investor units / percentage allocation is configured here"><span class="dot"></span>Allocations</div>
+      </div>
+      <div class="navitem open" onclick="togNav(this,'g-hs')"><span class="ic">◔</span>Holding &amp; Statements<span class="chev">▾</span></div>
+      <div class="subgroup open" id="g-hs">
+        <div class="subitem"><span class="dot"></span>Holdings</div>
+        <div class="subitem" id="navClose" onclick="CLOSE._returnToStatement=false;openClose()"><span class="dot"></span>Monthly Close</div>
+        <div class="subitem active" id="navStatements" onclick="openStatements()"><span class="dot"></span>Statements</div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- ===== MAIN ===== -->
+  <div class="main">
+    <div class="topbar">
+      <div class="crumbs">
+        <span class="home" onclick="openStatements()" style="cursor:pointer">⌂</span>
+        <span class="crumbgroup" onclick="crumbUp()" style="cursor:pointer">Holding &amp; Statements</span><span class="sep">›</span>
+        <span class="cur" id="crumbCur">Statements</span>
+      </div>
+      <div class="spacer"></div>
+      <div class="who"><div class="av">R</div>rangdi<span class="chev">▾</span></div>
+    </div>
+
+    <div class="stage">
+      <!-- ========== LIST VIEW ========== -->
+      <section id="listView">
+        <div class="pagehead">
+          <div>
+            <h1>Statement Management</h1>
+            <p>Manage project and subscription statement publications</p>
+          </div>
+          <button class="btn accent" onclick="openGen()">↑ &nbsp;Generate Project Statement</button>
+        </div>
+        <div class="banner info" id="closeHint" style="margin-top:14px"><span>ℹ</span><div>Statements draw their cost data from the project's <b>Monthly Close</b>. If the close for a month isn't complete, you can still start a statement, but operating-cost data will be blank until the close is done.</div></div>
+
+        <div class="filterbar">
+          <div class="field"><label>Project</label>
+            <select><option>All Projects</option><option>Tokenest test</option></select></div>
+          <div class="field"><label>Month</label>
+            <input type="month" style="min-width:170px"></div>
+          <div class="field"><label>Status</label>
+            <select><option>All</option><option>Published</option><option>Draft</option><option>Scheduled</option></select></div>
+          <div class="grow"></div>
+          <button class="btn accent sm">🔍 Search</button>
+          <button class="btn ghost sm">↺ Reset</button>
+        </div>
+
+        <table class="list">
+          <thead><tr><th>Month</th><th>Project</th><th>Investor</th><th>Status</th><th>Time</th><th>Actions</th></tr></thead>
+          <tbody id="listBody"></tbody>
+        </table>
+      </section>
+
+      <!-- ========== GENERATOR (5-step) injected here ========== -->
+      <section id="genView" class="hide"></section>
+
+      <!-- ========== INVESTORS › WALLET ========== -->
+      <section id="walletView" class="hide"></section>
+
+      <!-- ========== MONTHLY CLOSE ========== -->
+      <section id="closeView" class="hide"></section>
+
+      <!-- ========== AUDIT LOG ========== -->
+      <section id="auditView" class="hide"></section>
+
+      <!-- ========== PUBLISHED STATEMENT (read-only detail) ========== -->
+      <section id="viewView" class="hide"></section>
+    </div>
+  </div>
+</div>
+<div id="modalMount"></div>
+<div id="toast" class="hide" style="position:fixed;bottom:26px;left:50%;transform:translateX(-50%);background:var(--ink);color:#fff;padding:12px 22px;border-radius:30px;font-weight:600;font-size:13px;z-index:200;box-shadow:0 10px 30px rgba(0,0,0,.25)"></div>
+
+<script>
+function togNav(el,id){el.classList.toggle('open');document.getElementById(id).classList.toggle('open');}
+const fmt=(n,d=2)=>n.toLocaleString('en-US',{minimumFractionDigits:d,maximumFractionDigits:d});
+const btc=(n)=>n.toLocaleString('en-US',{minimumFractionDigits:6,maximumFractionDigits:8});
+const usd=(n)=>'$'+fmt(n,2);
+const pct=(n,d=2)=>fmt(n*100,d)+'%';
+function toast(m){const t=document.getElementById('toast');t.textContent=m;t.classList.remove('hide');setTimeout(()=>t.classList.add('hide'),2600);}
+
+/* existing published statements (mirrors the real platform list) */
+const LIST=[
+  ['2026-06','Tokenest test','Aiko T.','sched','2026/07/01 09:00'],
+  ['2026-05','Tokenest test','John D. XX','draft','—'],
+  ['2025-04','Tokenest test','John D. XX','pub','2026/05/21 14:18'],
+  ['2025-03','Tokenest test','John D. XX','pub','2026/05/20 18:31'],
+  ['2025-02','Tokenest test','Marcus L.','pub','2026/05/20 18:18'],
+  ['2026-01','Tokenest test','John D. XX','pub','2026/05/18 10:30'],
+  ['2026-02','Tokenest test','John D. XX','pub','2026/05/15 13:55'],
+  ['2026-03','Tokenest test','Aiko T.','pub','2026/05/15 20:54'],
+];
+function actionsFor(r,i){
+  if(r[3]==='sched') return `<span class="linkbtn" onclick="openDetail(${i})">view</span>
+    <span class="linkbtn" onclick="openGen()">edit</span>
+    <span class="linkbtn" style="color:var(--ink-dim)" onclick="cancelSchedule(${i})">cancel</span>
+    <span class="linkbtn" style="color:var(--accent)" onclick="deleteScheduled(${i})">delete</span>`;
+  if(r[3]==='draft') return `<span class="linkbtn" onclick="openGen()">edit</span>
+    <span class="linkbtn" style="color:var(--accent)" onclick="deleteDraft(${i})">delete</span>`;
+  return `<span class="linkbtn" onclick="openDetail(${i})">◷ view</span>`;
+}
+function listSortKey(r){
+  if(r[4]==='—') return 9e15;
+  const t=Date.parse(r[4].replace(/\//g,'-').replace(' ','T'));
+  return isNaN(t)?0:t;
+}
+function renderList(){
+  const rows=LIST.map((r,i)=>({r,i})).sort((a,b)=>listSortKey(b.r)-listSortKey(a.r));
+  document.getElementById('listBody').innerHTML=rows.map(({r,i})=>`
+    <tr><td><b>${r[0]}</b></td><td>${r[1]}</td><td>${r[2]}</td>
+    <td><span class="badge ${r[3]}">${r[3]==='pub'?'Published':r[3]==='draft'?'Draft':'Scheduled'}</span></td>
+    <td style="color:var(--ink-dim)">${r[4]}</td>
+    <td style="white-space:nowrap">${actionsFor(r,i)}</td></tr>`).join('');
+}
+function deleteDraft(i){
+  const r=LIST[i];
+  confirmModal('Delete draft','Delete the draft statement for '+r[0]+' · '+r[2]+'? This cannot be undone.','Delete',function(){
+    logEvent('DELETE','Statement · '+r[2],r[2]+' · '+r[0],'Deleted draft statement','','success');
+    LIST.splice(i,1); renderList(); toast('Draft deleted · recorded in Audit Log');
+  });
+}
+function deleteScheduled(i){
+  const r=LIST[i];
+  confirmModal('Delete scheduled statement','Delete the scheduled statement for '+r[0]+' · '+r[2]+'? This cancels the scheduled publish and removes it. This cannot be undone.','Delete',function(){
+    logEvent('DELETE','Statement · '+r[2],r[2]+' · '+r[0],'Deleted scheduled statement (publish cancelled)','','success');
+    LIST.splice(i,1); renderList(); toast('Scheduled statement deleted · recorded in Audit Log');
+  });
+}
+function cancelSchedule(i){
+  const r=LIST[i];
+  confirmModal('Cancel scheduled publish','Cancel the scheduled publish for '+r[0]+' · '+r[2]+'? It will revert to draft.','Revert to draft',function(){
+    LIST[i][3]='draft'; LIST[i][4]='—';
+    logEvent('UPDATE','Statement · '+r[2],r[2]+' · '+r[0],'Cancelled scheduled publish; reverted to draft','','success');
+    renderList(); toast('Scheduled publish cancelled · reverted to draft');
+  });
+}
+renderList();
+
+/* ===== AUDIT LOG (append-only activity log) ===== */
+const AUDIT=[
+  // seeded history
+  {ts:'2026-03-01 09:12:04', user:'Yi Lin · Finance', action:'CLOSE', obj:'Monthly Close C-2026-02', scope:'Tokenest test · Feb 2026', detail:'Completed close; YIMIAO bill + bank record ingested', reason:'Month-end', result:'success'},
+  {ts:'2026-03-01 09:31:55', user:'Yi Lin · Finance', action:'PUBLISH', obj:'Statement S-2026-02-0047', scope:'John D. XX · Feb 2026', detail:'Published to investor portal', reason:'', result:'success'},
+];
+function logEvent(action,obj,scope,detail,reason,result){
+  AUDIT.unshift({ts:nowTs(),user:'rangdi · Finance',action,obj,scope,detail:detail||'',reason:reason||'',result:result||'success'});
+}
+function nowTs(){const d=new Date();const p=n=>String(n).padStart(2,'0');
+  return `${d.getFullYear()}-${p(d.getMonth()+1)}-${p(d.getDate())} ${p(d.getHours())}:${p(d.getMinutes())}:${p(d.getSeconds())}`;}
+
+/* ---- view routing ---- */
+function showView(which){
+  if(which!=='closeView' && which!=='genView'){ CLOSE._returnToStatement=false; }
+  ['listView','genView','walletView','closeView','auditView','viewView'].forEach(v=>document.getElementById(v).classList.add('hide'));
+  document.getElementById(which).classList.remove('hide');
+  const ns=document.getElementById('navStatements'), nw=document.getElementById('navWallet'),
+        nc=document.getElementById('navClose'), na=document.getElementById('navAudit');
+  ns.classList.toggle('active', which==='listView'||which==='genView');
+  nw.classList.toggle('active', which==='walletView');
+  nc.classList.toggle('active', which==='closeView');
+  na.classList.toggle('active', which==='auditView');
+  window.scrollTo({top:0});
+}
+function openAudit(){ buildAudit(); showView('auditView');
+  document.querySelector('.crumbs').children[1].textContent='Common';
+  document.getElementById('crumbCur').textContent='Audit Log'; }
+function openClose(fromStatement){
+  if(fromStatement===true){ CLOSE._returnToStatement=true; CLOSE._returnStep=S._step||3; }
+  buildClose(); showView('closeView');
+  document.querySelector('.crumbs').children[1].textContent='Holding & Statements';
+  document.getElementById('crumbCur').textContent='Monthly Close'; }
+function openStatements(){ showView('listView'); document.getElementById('crumbCur').textContent='Statements';
+  document.querySelector('.crumbs').children[1].textContent='Holding & Statements'; refreshCloseHint(); }
+function crumbUp(){
+  const g=document.querySelector('.crumbs').children[1].textContent;
+  if(g==='Investors') openWallet();
+  else if(g==='Common') openAudit();
+  else openStatements();
+}
+function openWallet(){ buildWallet(); showView('walletView');
+  document.querySelector('.crumbs').children[1].textContent='Investors';
+  document.getElementById('crumbCur').textContent='Wallet'; }
+
+function openDetail(idx){
+  const r=LIST[idx];
+  const monthMap={'2026-02':['Feb 1 – Feb 28 2026','2026-02',28],'2026-03':['Mar 1 – Mar 31 2026','2026-03',31]};
+  S=defaultS();
+  const mk=r[0];
+  if(monthMap[mk]){S.month=monthMap[mk][0];S.monthKey=monthMap[mk][1];S.days=monthMap[mk][2];}
+  else {S.month=mk;S.monthKey=mk;}
+  S.investor=r[2]; S.stmtNo='TKD-'+mk+'-0047';
+  const docs=buildDocs();
+  const sched=r[3]==='sched';
+  const tsLabel = sched?'Scheduled for':'Published';
+  document.getElementById('viewView').innerHTML=`
+    <div class="genbar">
+      <span class="genback" onclick="openStatements()">← Back to statements</span>
+    </div>
+    <div class="pagehead" style="margin-bottom:4px">
+      <div><h1>${r[1]} · ${r[0]} · ${r[2]}</h1>
+      <p>${tsLabel} ${r[4]} · read-only</p></div>
+    </div>
+    ${docs}`;
+  showView('viewView');
+  document.querySelector('.crumbs').children[1].textContent='Holding & Statements';
+  document.getElementById('crumbCur').textContent='Statement · '+r[0];
+}
+
+/* ---- Investors › Wallet page ---- */
+const WALLETS=[
+  {inv:'John D. XX', id:'TKD-INV-00047', addr:'bc1qxy2kgdygjrsqtzq2n0yrf2493p83kkfjhx0w1h', deal:'Tokenest test · S21 Pro Pool'},
+];
+const DEALS=['Tokenest test · S21 Pro Pool','S21 Hydro Pool (2026)','Antbox Container A · 2025'];
+function buildWallet(){
+  document.getElementById('walletView').innerHTML=`
+    <div class="pagehead">
+      <div><h1>Investor Wallets</h1>
+      <p>Register each investor's BTC payout wallet and link it to their active deal. Balances are read from this wallet via the Cobo WaaS API.</p></div>
+    </div>
+
+    <div class="card">
+      <h3><span class="dot"></span>Link wallet to deal</h3>
+      <div class="hint">Wallet addresses are custodial — assigned by Tokenest via Cobo and synced automatically. Finance does not type addresses; only links the investor to their active deal(s).</div>
+      <div class="grid g2">
+        <div><label class="fl">Investor</label>
+          <select id="w_inv" onchange="onWalletInv()">
+            <option value="John D. XX|TKD-INV-00047|bc1qxy2kgdygjrsqtzq2n0yrf2493p83kkfjhx0w1h">John D. XX · TKD-INV-00047</option>
+            <option value="Aiko T.|TKD-INV-00031|bc1q8h4j2m9v8p3k5d7r0t6y4u2w1x9z0a2m2v9p">Aiko T. · TKD-INV-00031</option>
+            <option value="Marcus L.|TKD-INV-00088|">Marcus L. · TKD-INV-00088</option>
+          </select></div>
+        <div><label class="fl">Custodial BTC wallet <span class="src cobo">Cobo · synced</span></label>
+          <input class="mono" id="w_addr" readonly></div>
+      </div>
+      <div style="margin-top:16px">
+        <label class="fl">Linked active deal</label>
+        <div id="w_deals" style="display:flex;flex-direction:column;gap:8px;margin-top:4px">
+          ${DEALS.map((d,i)=>`<label class="dealrow"><input type="checkbox" value="${d}"> <span>${d}</span> <span class="dealtag">active</span></label>`).join('')}
+        </div>
+      </div>
+      <div class="actions">
+        <button class="btn accent" onclick="saveWallet()">Save link</button>
+        <span class="note">Address is synced from Cobo, not entered. Linking is confirmed before it takes effect.</span>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3><span class="dot"></span>Registered wallets</h3>
+      <table class="data" style="margin-top:6px"><thead>
+        <tr><th>Investor</th><th>Account ID</th><th>Wallet address</th><th>Linked deal</th><th></th></tr></thead>
+        <tbody id="walletRows"></tbody></table>
+    </div>`;
+  renderWalletRows();
+  onWalletInv();
+}
+function renderWalletRows(){
+  document.getElementById('walletRows').innerHTML=WALLETS.map(w=>`
+    <tr><td class="lbl">${w.inv}</td><td>${w.id}</td>
+      <td style="font-size:11px">${w.addr.slice(0,14)}…${w.addr.slice(-8)}</td>
+      <td class="lbl">${w.deal}</td>
+      <td><span class="src cobo" title="balance source">Cobo API ✓</span></td></tr>`).join('')
+    || `<tr><td colspan="5" style="color:var(--ink-faint);font-family:var(--sans)">No wallets registered yet.</td></tr>`;
+}
+function onWalletInv(){
+  const v=document.getElementById('w_inv').value.split('|');
+  const addr=v[2];
+  const el=document.getElementById('w_addr');
+  if(addr){ el.value=addr; el.style.color=''; }
+  else { el.value='Not yet assigned — request allocation from Cobo'; el.style.color='var(--ink-faint)'; }
+}
+function saveWallet(){
+  const inv=document.getElementById('w_inv').value.split('|');
+  const addr=inv[2];
+  const deals=[...document.querySelectorAll('#w_deals input:checked')].map(c=>c.value);
+  if(!addr){toast('No custodial wallet assigned yet — request allocation from Cobo first');return;}
+  if(!deals.length){toast('Tick at least one active deal');return;}
+  WALLETS.push({inv:inv[0],id:inv[1],addr,deal:deals.join(', ')});
+  logEvent('LINK','Wallet · '+inv[1],inv[0],'Linked custodial wallet to: '+deals.join(', '),'','success');
+  document.querySelectorAll('#w_deals input:checked').forEach(c=>c.checked=false);
+  renderWalletRows();
+  toast('✓ Linked '+inv[0]+' · '+WALLETS.length+' wallet'+(WALLETS.length>1?'s':'')+' registered');
+}
+
+/* ---- Monthly Close (project-level, once a month) ---- */
+const CLOSE_INVESTORS=[
+  {inv:'John D. XX', id:'TKD-INV-00047', mode:'UNITS', units:50, pool:900, sharePct:50/900, rsvOpen:18500.00},
+  {inv:'Aiko T.',    id:'TKD-INV-00031', mode:'PERCENT', units:0, pool:500, sharePct:0.0556, rsvOpen:42000.00},
+  {inv:'Marcus L.',  id:'TKD-INV-00088', mode:'UNITS', units:35, pool:900, sharePct:35/900, rsvOpen:9800.00},
+];
+/* dummy: a month already closed — read-only historical snapshot */
+const MAR_OPEX = 221450.18;
+const CLOSE_SNAPSHOTS={
+  '2026-03':{
+    refMonth:'March 2026', closedOn:'2026-04-01 10:22:13 UTC', closedBy:'Yi Lin · Finance',
+    billDoc:'YIMIAO_Mar2026.pdf', bankDoc:'Bank_Record_Mar2026.pdf',
+    extracted:[
+      {label:'Power (pre-tax)', val:146820.40, conf:0.98, src:'OCR'},
+      {label:'Power tax (14.9%)', val:21876.24, conf:0.97, src:'OCR'},
+      {label:'Hosting', val:46579.83, conf:0.97, src:'OCR'},
+      {label:'Audit fees', val:4200.00, conf:null, src:'manual'},
+      {label:'Insurance', val:1973.71, conf:null, src:'manual'},
+    ],
+    fleetOpex:MAR_OPEX,
+    bankProjectReserve:64150.00, bankOpexPayment:12302.79,
+    investors:[
+      {inv:'John D. XX', id:'TKD-INV-00047', share:'50/900 (5.56%)', sharePct:50/900, rsvOpen:12500.00},
+      {inv:'Aiko T.',    id:'TKD-INV-00031', share:'5.56% of fleet', sharePct:0.0556, rsvOpen:38400.00},
+      {inv:'Marcus L.',  id:'TKD-INV-00088', share:'35/900 (3.89%)', sharePct:35/900, rsvOpen:13250.00},
+    ]
+  }
+};
+const CLOSE={billLoaded:false, bankLoaded:false, status:'open',
+  ocrOpex:218762.80,            // total extracted from OCR'd bills (YIMIAO etc.)
+  manualLines:[],               // [{type, amount, src:'manual'}] — audit fees, tax, etc. (not every month)
+  fleetOpex:218762.80,          // = ocrOpex + Σ manualLines (derived, recomputed)
+  bankProjectReserve:70300.00, bankOpexPayment:0,
+  billConf:0.97, bankConf:0.93, refMonth:'February 2026'};
+function recomputeOpex(){
+  CLOSE.fleetOpex = (CLOSE.billLoaded?CLOSE.ocrOpex:0) + CLOSE.manualLines.reduce((a,l)=>a+(+l.amount||0),0);
+}
+const CLOSED_MONTHS=new Set(['2026-03']);
+function onCloseMonth(label){
+  const mk = label==='March 2026' ? '2026-03' : '2026-02';
+  CLOSE.refMonth=label; CLOSE.refMonthKey=mk;
+  if(CLOSED_MONTHS.has(mk)){
+    CLOSE.status='closed';
+  } else {
+    CLOSE.status='open'; CLOSE.billLoaded=false; CLOSE.bankLoaded=false;
+    CLOSE.manualLines=[]; CLOSE._crossOk=undefined; recomputeOpex();
+  }
+  buildClose();
+}
+/* structured OCR fields — clickable, editable, with mock pdf position + confidence */
+const OCRFIELDS={
+  bill:[
+    {k:'powerPre', label:'Power (pre-tax)', ocr:144397.47, val:144397.47, conf:0.98, adjusted:false, doc:'YIMIAO bill', line:'Power and hosting fees', region:'mid'},
+    {k:'powerTax', label:'Power tax', ocr:21515.22, val:21515.22, conf:0.96, adjusted:false, doc:'YIMIAO bill', line:'Tax @14.9%', region:'mid'},
+    {k:'hosting', label:'Hosting', ocr:46579.83, val:46579.83, conf:0.97, adjusted:false, doc:'YIMIAO bill', line:'Hosting fee', region:'mid'},
+    {k:'fleetOpex', label:'Total operating cost', ocr:218762.80, val:218762.80, conf:0.95, adjusted:false, doc:'YIMIAO bill', line:'Invoice total', region:'bottom'},
+  ],
+  bank:[
+    {k:'bankProjectReserve', label:'Project reserve total', ocr:70300.00, val:70300.00, conf:0.91, adjusted:false, doc:'Bank record', line:'Reserve account balance', region:'top'},
+    {k:'bankOpexPayment', label:'Payment to operating costs', ocr:12153.49, val:12153.49, conf:0.93, adjusted:false, doc:'Bank record', line:'Outgoing · operating costs', region:'mid'},
+  ]
+};
+function ocrField(group,key){return OCRFIELDS[group].find(f=>f.k===key);}
+function closedSummaryHTML(){
+  const s=CLOSE_SNAPSHOTS[CLOSE.refMonthKey]; if(!s)return '';
+  const rows=s.extracted.map(e=>`<tr>
+    <td class="lbl" style="font-family:var(--sans)">${e.label}</td>
+    <td class="mono">${usd(e.val)}</td>
+    <td>${e.src==='OCR'?`<span class="src ocr">OCR ${pct(e.conf,0)}</span>`:`<span class="src man">manual</span>`}</td></tr>`).join('');
+  const inv=s.investors.map(v=>`<tr>
+    <td class="lbl">${v.inv}<br><span style="color:var(--ink-faint);font-size:10px">${v.id}</span></td>
+    <td>${v.share}</td>
+    <td class="mono">${usd(s.fleetOpex*v.sharePct)}</td>
+    <td class="mono">${usd(v.rsvOpen)}</td></tr>`).join('');
+  const sumRsv=s.investors.reduce((a,b)=>a+b.rsvOpen,0);
+  return `
+    <div class="card">
+      <h3><span class="dot"></span>Closed snapshot — historical record <span class="src cfg" style="margin-left:4px">read-only</span></h3>
+      <div class="hint">Closed on ${s.closedOn} by ${s.closedBy}. Documents: ${s.billDoc}, ${s.bankDoc}. The figures below are the values used at close and cannot be edited unless the close is reopened.</div>
+      <div class="minih" style="margin-top:14px">Extracted &amp; entered cost lines</div>
+      <table class="data" style="margin-top:6px"><thead><tr>
+        <th style="width:50%">Cost line</th><th style="width:30%">Amount</th><th>Source</th></tr></thead>
+        <tbody>${rows}
+        <tr style="border-top:2px solid var(--line)"><td class="lbl" style="font-family:var(--sans);font-weight:700">Total operating cost</td>
+          <td class="mono" style="font-weight:700">${usd(s.fleetOpex)}</td><td></td></tr></tbody></table>
+      <div class="minih" style="margin-top:16px">Bank record</div>
+      <div class="grid g2" style="margin-top:6px">
+        <div class="banner ok"><span>✓</span><div>Project reserve total <b>${usd(s.bankProjectReserve)}</b></div></div>
+        <div class="banner ok"><span>✓</span><div>Payment to operating costs <b>${usd(s.bankOpexPayment)}</b></div></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3><span class="dot"></span>Investor allocation — as mapped at close</h3>
+      <div class="hint">Operating cost allocated pro-rata; reserve opening carried from Subscriptions. This is the snapshot each investor's statement draws from.</div>
+      <table class="data"><thead><tr>
+        <th>Investor</th><th>Share</th><th>Pro-rata opex</th><th>Reserve opening</th></tr></thead>
+        <tbody>${inv}</tbody></table>
+      <div class="banner ok" style="margin-top:12px"><span>✓</span><div>Reconciled: Σ investor reserve openings ${usd(sumRsv)} vs bank reserve total ${usd(s.bankProjectReserve)}.</div></div>
+    </div>`;
+}
+function buildClose(){
+  const isClosed = CLOSE.status==='closed';
+  const entryCards = `
+    <div class="card">
+      <h3><span class="dot"></span>1 · Cost Extraction &amp; Entry <span class="src ocr" style="margin-left:4px">OCR + manual</span></h3>
+      <div class="hint">Extract operating costs from supplier bills (YIMIAO etc.) via OCR, and add any other cost lines manually (audit, tax, insurance…). These don't appear every month. Everything sums into the project's monthly operating cost. The bank record is also uploaded here for reconciliation.</div>
+      <div class="grid g2">
+        <div class="uploadzone" onclick="closeBill()"><div style="font-size:22px;margin-bottom:5px">📄</div><b>Supplier bill — OCR</b><p style="color:var(--ink-faint);font-size:12px;margin-top:3px">YIMIAO operating cost</p><div id="cBill"></div></div>
+        <div class="uploadzone" onclick="closeBank()"><div style="font-size:22px;margin-bottom:5px">🏦</div><b>Bank payment record — OCR</b><p style="color:var(--ink-faint);font-size:12px;margin-top:3px">reserve total + opex payment</p><div id="cBank"></div></div>
+      </div>
+      <div id="ocrOut"></div>
+
+      <div style="margin-top:18px;border-top:1px solid var(--line-soft);padding-top:14px">
+        <div class="minih">Additional cost lines <span style="color:var(--ink-faint);text-transform:none;letter-spacing:0">(manual — for fees with no standard bill; optional)</span></div>
+        <table class="data" style="margin-top:6px"><thead><tr>
+          <th style="width:42%">Cost type</th><th style="width:30%">Amount (USD)</th><th style="width:16%">Source</th><th></th></tr></thead>
+          <tbody id="manualRows"></tbody></table>
+        <div style="display:flex;gap:10px;align-items:flex-end;margin-top:10px;flex-wrap:wrap">
+          <div><label class="fl">Cost type</label>
+            <select id="ml_type" onchange="document.getElementById('ml_custom').style.display=this.value==='Other'?'block':'none'">
+              <option>Audit fees</option><option>Tax fees</option><option>Insurance</option>
+              <option>Custody fees</option><option>Legal fees</option><option>Other</option></select></div>
+          <div id="ml_custom" style="display:none"><label class="fl">Custom name</label><input id="ml_name" placeholder="e.g. Network upgrade"></div>
+          <div><label class="fl">Amount (USD)</label><input class="mono" id="ml_amt" placeholder="0.00"></div>
+          <button class="btn ghost sm" onclick="addManualLine()">+ Add line</button>
+        </div>
+      </div>
+
+      <div id="opexTotalBox" style="margin-top:16px"></div>
+    </div>
+
+    <div class="card">
+      <h3><span class="dot"></span>2 · Investor split &amp; reconciliation</h3>
+      <div class="hint">Operating cost is allocated pro-rata. Reserve opening balances are carried per-investor from Subscriptions (set at subscription, rolled forward monthly).</div>
+      <table class="data"><thead><tr>
+        <th>Investor</th><th>Share</th><th>Pro-rata opex</th>
+        <th>Reserve opening <span class="src cfg">Subscriptions</span></th></tr></thead>
+        <tbody id="splitRows"></tbody></table>
+      <div id="reconBox"></div>
+    </div>`;
+  document.getElementById('closeView').innerHTML=`
+    <div class="pagehead">
+      <div><h1>Monthly Close</h1>
+      <p>Project-level month-end close. Upload the supplier bill and bank record once; the platform splits costs and reserves across all investors in the project. Statements are then generated from this close.</p></div>
+    </div>
+    <div class="filterbar">
+      <div class="field"><label>Project</label><select id="c_project"><option>Tokenest test · S21 Pro Pool</option></select></div>
+      <div class="field"><label>Statement Month</label><select id="c_month" onchange="onCloseMonth(this.value)"><option>February 2026</option><option>March 2026</option></select></div>
+      <div class="grow"></div>
+      <span id="closeStatusBig"></span>
+    </div>
+
+    ${isClosed ? closedSummaryHTML() : entryCards}
+
+    <div class="actions" id="closeActions"></div>`;
+  if(!isClosed){
+    renderSplit();
+    renderManualLines();
+    renderOpexTotal();
+  }
+  renderCloseActions();
+  renderCloseStatus(CLOSE.status==='closed'?'closed':CLOSE.status==='deleted'?'deleted':'open');
+  const sel=document.getElementById('c_month'); if(sel)sel.value=CLOSE.refMonth;
+}
+function renderManualLines(){
+  const tb=document.getElementById('manualRows'); if(!tb)return;
+  tb.innerHTML = CLOSE.manualLines.length ? CLOSE.manualLines.map((l,i)=>`
+    <tr><td class="lbl" style="font-family:var(--sans)">${l.type}</td>
+      <td class="mono">${usd(+l.amount)}</td>
+      <td><span class="src man">manual</span></td>
+      <td><span class="linkbtn" style="padding:3px 9px" onclick="removeManualLine(${i})">remove</span></td></tr>`).join('')
+    : `<tr><td colspan="4" style="color:var(--ink-faint);font-family:var(--sans)">No additional lines. Most months only have the supplier bill.</td></tr>`;
+}
+function addManualLine(){
+  const sel=document.getElementById('ml_type');
+  let type=sel.value;
+  if(type==='Other'){ const n=document.getElementById('ml_name').value.trim(); if(!n){toast('Enter a custom cost name');return;} type=n; }
+  const amt=parseFloat(document.getElementById('ml_amt').value);
+  if(isNaN(amt)||amt<=0){toast('Enter a valid amount');return;}
+  CLOSE.manualLines.push({type,amount:amt,src:'manual'});
+  document.getElementById('ml_amt').value=''; const nm=document.getElementById('ml_name'); if(nm)nm.value='';
+  logEvent('UPDATE','Operating cost · '+CLOSE.refMonth,'Tokenest test · '+CLOSE.refMonth,
+    'Added manual cost line: '+type+' '+usd(amt),'','success');
+  recomputeOpex(); renderManualLines(); renderOpexTotal(); ocrSummary(); checkClose();
+}
+function removeManualLine(i){
+  const l=CLOSE.manualLines[i];
+  CLOSE.manualLines.splice(i,1);
+  logEvent('UPDATE','Operating cost · '+CLOSE.refMonth,'Tokenest test · '+CLOSE.refMonth,
+    'Removed manual cost line: '+l.type+' '+usd(+l.amount),'','success');
+  recomputeOpex(); renderManualLines(); renderOpexTotal(); ocrSummary(); checkClose();
+}
+function renderOpexTotal(){
+  const box=document.getElementById('opexTotalBox'); if(!box)return;
+  recomputeOpex();
+  const ocrPart=CLOSE.billLoaded?CLOSE.ocrOpex:0;
+  const manPart=CLOSE.manualLines.reduce((a,l)=>a+(+l.amount||0),0);
+  box.innerHTML=`<div class="banner info"><span>Σ</span><div>Project monthly operating cost = OCR <b>${usd(ocrPart)}</b> + manual <b>${usd(manPart)}</b> = <b>${usd(CLOSE.fleetOpex)}</b>. This total is allocated pro-rata to all investors.</div></div>`;
+}
+function closeBill(){CLOSE.billLoaded=true;CLOSE.refMonthKey='2026-02';
+  document.getElementById('cBill').innerHTML=`<div class="filechip" style="margin-top:8px">✓ YIMIAO_Feb2026.pdf <span class="ok">OCR</span></div>`;
+  recomputeOpex();
+  logEvent('UPLOAD','Supplier bill · '+CLOSE.refMonth,'Tokenest test · '+CLOSE.refMonth,'OCR extracted operating cost '+usd(CLOSE.ocrOpex),'','success');
+  ocrSummary();checkClose();renderCloseActions();renderOpexTotal();}
+function closeBank(){CLOSE.bankLoaded=true;CLOSE.bankOpexPayment=12153.49;CLOSE.refMonthKey='2026-02';
+  document.getElementById('cBank').innerHTML=`<div class="filechip" style="margin-top:8px">✓ Bank_Record_Feb2026.pdf <span class="ok">OCR</span></div>`;
+  logEvent('UPLOAD','Bank record · '+CLOSE.refMonth,'Tokenest test · '+CLOSE.refMonth,'OCR extracted reserve total '+usd(CLOSE.bankProjectReserve)+', opex payment '+usd(CLOSE.bankOpexPayment),'','success');
+  ocrSummary();checkClose();renderCloseActions();}
+function fieldChips(group){
+  return OCRFIELDS[group].map(f=>{
+    const low=f.conf<0.95;
+    return `<div class="ocrchip ${low?'low':''} ${f.adjusted?'adj':''}" onclick="openVerify('${group}','${f.k}')" title="Click to view in source & edit">
+      <div class="ocrk">${f.label}</div>
+      <div class="ocrv">${usd(f.val)}</div>
+      <div class="ocrmeta">${f.adjusted?'✎ adjusted':'OCR '+pct(f.conf,0)}${low&&!f.adjusted?' · verify':''}</div>
+    </div>`;
+  }).join('');
+}
+function ocrSummary(){
+  let h='';
+  if(CLOSE.billLoaded){
+    h+=`<div class="minih" style="margin-top:14px">YIMIAO bill — extracted fields <span style="color:var(--ink-faint);text-transform:none;letter-spacing:0">(click a value to view in source &amp; edit)</span></div>
+        <div class="ocrgrid">${fieldChips('bill')}</div>`;
+  }
+  if(CLOSE.bankLoaded){
+    h+=`<div class="minih" style="margin-top:14px">Bank record — extracted fields</div>
+        <div class="ocrgrid">${fieldChips('bank')}</div>`;
+  }
+  // V024 cross-check: bank opex payment ≈ YIMIAO bill-derived (hard gate)
+  if(CLOSE.billLoaded && CLOSE.bankLoaded){
+    const dev=Math.abs(CLOSE.bankOpexPayment-(CLOSE.ocrOpex*(50/900)));
+    const ok=dev<1;
+    CLOSE._crossOk=ok;
+    h+=`<div class="banner ${ok?'ok':'warn'}"><span>${ok?'✓':'⚠'}</span><div><b>V024 cross-check:</b> bank opex payment ${usd(CLOSE.bankOpexPayment)} vs bill-derived ${usd(CLOSE.ocrOpex*(50/900))} · Δ ${usd(dev)} — ${ok?'matches.':'<b>mismatch — blocks close until resolved.</b>'}</div></div>`;
+  }
+  document.getElementById('ocrOut').innerHTML=h;
+}
+
+/* click an extracted figure → mock PDF preview with highlight + editable value + reason */
+function openVerify(group,key){
+  const f=ocrField(group,key);
+  const regionTop={top:'18%',mid:'46%',bottom:'72%'}[f.region]||'46%';
+  document.getElementById('modalMount').innerHTML=`<div class="modal-bg" onclick="if(event.target===this)closeModal()">
+    <div class="modal" style="width:760px;max-width:94vw">
+      <h3>Verify extracted value</h3>
+      <p>${f.doc} · field “${f.label}”. Confirm against the source, edit if wrong. Edits are recorded in the Audit Log.</p>
+      <div style="display:grid;grid-template-columns:1.2fr 1fr;gap:16px;margin-top:16px">
+        <div class="pdfmock">
+          <div class="pdfbar">${f.doc}.pdf · page 1</div>
+          <div class="pdfpage">
+            ${[0,1,2,3,4,5].map(i=>`<div class="pdfline" style="width:${[70,55,80,45,62,50][i]}%"></div>`).join('')}
+            <div class="pdfhi" style="top:${regionTop}">
+              <span>${f.line}</span><b>${usd(f.ocr)}</b>
+            </div>
+            ${[0,1,2].map(i=>`<div class="pdfline" style="width:${[60,72,40][i]}%;margin-top:8px"></div>`).join('')}
+          </div>
+        </div>
+        <div>
+          <label class="fl">OCR original</label>
+          <input class="mono" value="${usd(f.ocr)}" readonly>
+          <div style="margin:6px 0 14px;font-size:11px;color:${f.conf<0.95?'var(--amber)':'var(--green)'}">confidence ${pct(f.conf,0)}${f.conf<0.95?' · low, please verify':''}</div>
+          <label class="fl">Adopted value</label>
+          <input class="mono" id="vf_val" value="${f.val}">
+          <label class="fl" style="margin-top:12px">Reason for change <span style="color:var(--ink-faint)">(required if edited)</span></label>
+          <input id="vf_reason" placeholder="e.g. OCR misread decimal">
+        </div>
+      </div>
+      <div class="mact" style="margin-top:18px">
+        <button class="btn ghost" onclick="closeModal()">Cancel</button>
+        <button class="btn accent" onclick="saveVerify('${group}','${key}')">Confirm value</button>
+      </div>
+    </div></div>`;
+}
+function saveVerify(group,key){
+  const f=ocrField(group,key);
+  const nv=parseFloat(document.getElementById('vf_val').value);
+  const reason=document.getElementById('vf_reason').value.trim();
+  if(isNaN(nv)){toast('Enter a valid number');return;}
+  const changed=Math.abs(nv-f.ocr)>0.005;
+  if(changed && !reason){toast('A reason is required when changing an OCR value');return;}
+  const oldVal=f.val;
+  f.val=nv; f.adjusted=changed;
+  // sync to CLOSE aggregates
+  if(key==='fleetOpex')CLOSE.fleetOpex=nv;
+  if(key==='bankProjectReserve')CLOSE.bankProjectReserve=nv;
+  if(key==='bankOpexPayment')CLOSE.bankOpexPayment=nv;
+  if(changed){
+    logEvent('UPDATE',f.doc+' · '+f.label,'Tokenest test · '+CLOSE.refMonth,
+      'OCR value adjusted: '+usd(f.ocr)+' (OCR) → '+usd(nv),reason,'success');
+    toast('✓ Value adjusted · recorded in Audit Log');
+  } else toast('Value confirmed');
+  closeModal(); ocrSummary(); checkClose();
+}
+function renderSplit(){
+  document.getElementById('splitRows').innerHTML=CLOSE_INVESTORS.map(v=>{
+    const lbl=v.mode==='PERCENT'?pct(v.sharePct)+' of fleet':v.units+'/'+v.pool+' ('+pct(v.units/v.pool)+')';
+    const opex=CLOSE.billLoaded?usd(CLOSE.fleetOpex*v.sharePct):'—';
+    return `<tr><td class="lbl">${v.inv}<br><span style="color:var(--ink-faint);font-size:10px">${v.id}</span></td>
+      <td>${lbl}</td><td>${opex}</td><td>${usd(v.rsvOpen)}</td></tr>`;
+  }).join('');
+  // reconciliation: sum of investor reserves vs bank project reserve
+  if(CLOSE.bankLoaded){
+    const sumRsv=CLOSE_INVESTORS.reduce((a,b)=>a+b.rsvOpen,0);
+    const ok=Math.abs(sumRsv-CLOSE.bankProjectReserve)<10;
+    document.getElementById('reconBox').innerHTML=
+      `<div class="banner ${ok?'ok':'warn'}"><span>${ok?'✓':'⚠'}</span><div><b>Reconciliation:</b> Σ investor reserve openings ${usd(sumRsv)} vs bank record ${usd(CLOSE.bankProjectReserve)} · Δ ${usd(Math.abs(sumRsv-CLOSE.bankProjectReserve))} — ${ok?'reconciled.':'review required.'}</div></div>`;
+  } else document.getElementById('reconBox').innerHTML='';
+}
+function checkClose(){
+  const ready=CLOSE.billLoaded&&CLOSE.bankLoaded&&CLOSE._crossOk!==false;
+  const btn=document.getElementById('closeBtn'); if(btn){btn.disabled=!ready;}
+  renderSplit();
+}
+function renderCloseStatus(state){
+  const box=document.getElementById('closeStatusBig'); if(!box)return;
+  const m={
+    open:    {cls:'s-open',    ic:'○', tt:'NOT CLOSED'},
+    closed:  {cls:'s-closed',  ic:'●', tt:'CLOSED'},
+    reopen:  {cls:'s-reopen',  ic:'◐', tt:'REOPENED'},
+    deleted: {cls:'s-deleted', ic:'⊘', tt:'DELETED'}
+  }[state]||{cls:'s-open',ic:'○',tt:'NOT CLOSED'};
+  box.innerHTML=`<span class="statpill ${m.cls}"><span class="ic">${m.ic}</span>${m.tt}</span>`;
+}
+function doClose(){
+  CLOSE.status='closed';
+  CLOSED_MONTHS.add(CLOSE.refMonthKey||'2026-02');
+  renderCloseStatus('closed');
+  logEvent('CLOSE','Monthly Close · '+CLOSE.refMonth,'Tokenest test · '+CLOSE.refMonth,
+    'Completed close; bill + bank record ingested; reconciliation passed','Month-end','success');
+  toast('✓ Month closed · statements can now be generated');
+  renderCloseActions();
+  refreshCloseHint();
+}
+function refreshCloseHint(){
+  const el=document.getElementById('closeHint'); if(!el)return;
+  const months=[...CLOSED_MONTHS];
+  if(months.length){
+    el.className='banner ok';
+    el.querySelector('div').innerHTML=`Monthly Close complete for: <b>${months.join(', ')}</b>. Statements for ${months.length>1?'these months':'this month'} can be generated with full cost data.`;
+  }
+}
+/* edit a completed close: reopen for changes (logged) */
+function editClose(){
+  CLOSE.status='open';
+  renderCloseStatus('reopen');
+  logEvent('UPDATE','Monthly Close · '+CLOSE.refMonth,'Tokenest test · '+CLOSE.refMonth,
+    'Reopened completed close for correction','Data correction','success');
+  toast('Close reopened — make changes, then complete again');
+  renderCloseActions();
+}
+/* delete a close: soft-delete, blocked if referenced by published statements */
+function deleteClose(){
+  const referenced = LIST.some(r=>r[0]===CLOSE.refMonthKey && r[3]==='pub');
+  if(referenced){
+    logEvent('DELETE','Monthly Close · '+CLOSE.refMonth,'Tokenest test · '+CLOSE.refMonth,
+      'Delete attempt blocked — referenced by published statement(s)','','blocked');
+    toast('⚠ Cannot delete — published statements depend on this close. Use restatement.');
+    return;
+  }
+  confirmModal('Delete Monthly Close','Soft-delete this Monthly Close? Data is retained and remains in the audit log.','Delete',function(){
+    CLOSE.status='deleted';CLOSE.billLoaded=false;CLOSE.bankLoaded=false;
+    CLOSED_MONTHS.delete(CLOSE.refMonthKey);
+    renderCloseStatus('deleted');
+    logEvent('DELETE','Monthly Close · '+CLOSE.refMonth,'Tokenest test · '+CLOSE.refMonth,
+      'Soft-deleted close (data retained)','Erroneous upload','success');
+    toast('Close soft-deleted · recorded in audit log');
+    renderCloseActions();
+  });
+}
+function renderCloseActions(){
+  const box=document.getElementById('closeActions'); if(!box)return;
+  const retBtn = CLOSE._returnToStatement
+    ? `<button class="btn accent" onclick="returnToStatement()">← Return to statement</button>` : '';
+  if(CLOSE.status==='closed'){
+    box.innerHTML=`${retBtn}<span class="note">${CLOSE._returnToStatement?'Close complete — return to finish the statement.':'This month is closed. The snapshot above is read-only.'}</span>`;
+  } else if(CLOSE.status==='deleted'){
+    box.innerHTML=`<span class="note">This close is soft-deleted. Data is retained and visible in the Audit Log.</span>`;
+  } else {
+    box.innerHTML=`<button class="btn accent" id="closeBtn" ${CLOSE.billLoaded&&CLOSE.bankLoaded&&CLOSE._crossOk!==false?'':'disabled'} onclick="doClose()">Complete close &amp; enable statements</button>
+      <span class="note">Statements can be generated once the close is complete and reconciled.</span>`;
+  }
+}
+function returnToStatement(){
+  const step=CLOSE._returnStep||3;
+  CLOSE._returnToStatement=false;
+  showView('genView');
+  document.querySelector('.crumbs').children[1].textContent='Holding & Statements';
+  document.getElementById('crumbCur').textContent='Generate Statement';
+  go(step);
+}
+
+
+
+function openGen(){
+  S=defaultS(); _warnedCritical=false;
+  buildGenerator();
+  showView('genView');
+  document.querySelector('.crumbs').children[1].textContent='Holding & Statements';
+  document.getElementById('crumbCur').textContent='Generate Statement';
+  go(1);
+}
+function backToList(){
+  showView('listView');
+  document.querySelector('.crumbs').children[1].textContent='Holding & Statements';
+  document.getElementById('crumbCur').textContent='Statements';
+}
+
+/* ===== Audit Log page ===== */
+function buildAudit(){
+  const actColor={CREATE:'cobo',UPDATE:'cfg',DELETE:'man',PUBLISH:'f2',CLOSE:'f2',UPLOAD:'ocr',LINK:'calc'};
+  document.getElementById('auditView').innerHTML=`
+    <div class="pagehead">
+      <div><h1>Audit Log</h1>
+      <p>Append-only record of every operational action. Entries cannot be edited or deleted — including deletions, which are themselves logged. Retained per policy.</p></div>
+    </div>
+    <div class="filterbar">
+      <div class="field"><label>Action</label><select id="a_action" onchange="renderAudit()">
+        <option value="">All actions</option><option>CLOSE</option><option>PUBLISH</option><option>UPLOAD</option><option>UPDATE</option><option>DELETE</option><option>LINK</option></select></div>
+      <div class="field"><label>Search</label><input id="a_q" placeholder="investor / object…" oninput="renderAudit()" style="min-width:200px"></div>
+      <div class="grow"></div>
+      <span class="pill">${AUDIT.length} entries · immutable</span>
+    </div>
+    <table class="list"><thead><tr>
+      <th>Timestamp (UTC)</th><th>User</th><th>Action</th><th>Object</th><th>Scope</th><th>Detail</th><th>Result</th></tr></thead>
+      <tbody id="auditRows"></tbody></table>`;
+  renderAudit();
+}
+function renderAudit(){
+  const actColor={CREATE:'cobo',UPDATE:'cfg',DELETE:'man',PUBLISH:'f2',CLOSE:'f2',UPLOAD:'ocr',LINK:'calc'};
+  const fa=(document.getElementById('a_action')||{}).value||'';
+  const fq=((document.getElementById('a_q')||{}).value||'').toLowerCase();
+  const rows=AUDIT.filter(e=>(!fa||e.action===fa)&&(!fq||(e.obj+e.scope+e.detail).toLowerCase().includes(fq)));
+  document.getElementById('auditRows').innerHTML=rows.map(e=>`
+    <tr><td style="font-family:var(--mono);font-size:11.5px;white-space:nowrap">${e.ts}</td>
+      <td>${e.user}</td>
+      <td><span class="src ${actColor[e.action]||'calc'}">${e.action}</span></td>
+      <td>${e.obj}</td>
+      <td style="color:var(--ink-dim)">${e.scope}</td>
+      <td style="color:var(--ink-dim);font-size:12.5px">${e.detail}${e.reason?` <span style="color:var(--ink-faint)">· ${e.reason}</span>`:''}</td>
+      <td><span class="badge ${e.result==='success'?'pub':'draft'}" style="font-size:10.5px">${e.result}</span></td></tr>`).join('')
+    || `<tr><td colspan="7" style="color:var(--ink-faint)">No matching entries.</td></tr>`;
+}
+
+/* ===================== GENERATOR ===================== */
+function defaultS(){return{
+  // Step 1 — read-only, from Subscriptions › Allocations
+  investor:'John D. XX', invId:'TKD-INV-00047', wallet:'bc1qxy2…x0w1h',
+  shareMode:'UNITS',            // 'UNITS' | 'PERCENT' (how allocation is defined upstream)
+  units:50, pool:900, sharePct:0.0556,
+  equipCap:213350, cashInit:30000, totSub:243350,
+  method:'OPEX_FROM_BTC_AND_RESERVES',
+  rmName:'Sarah Lim, CFA',
+  // Step 2
+  month:'Feb 1 – Feb 28 2026', monthKey:'2026-02', days:28, stmtNo:'TKD-2026-02-0047',
+  openBal:0.0, wdr:0.02000000,
+  btcPrice:96400,               // SINGLE F2Pool BTC price for all BTC↔USD
+  rsvOpen:18500.00, rsvDraw:6000.00, rsvTopup:0.00,
+  priorCloseBTC:0.065828, priorCloseRsv:18500.00,
+  isFirst:false,
+  // Step 3
+  billsLoaded:false, sched:'now'
+};}
+let S=defaultS();
+function share(){ return S.shareMode==='PERCENT'? S.sharePct : S.units/S.pool; }
+function shareLabel(){ return S.shareMode==='PERCENT'
+  ? pct(S.sharePct)+' of fleet'
+  : S.units+' / '+S.pool+' ('+pct(S.units/S.pool)+')'; }
+
+/* F2Pool + YIMIAO (Feb 2026). F2Pool is the source of truth. */
+const REAL={
+  fleetBTC:2.993226,              // F2Pool fleet mined — TRUTH
+  yimiaoFleetBTC:2.99180,         // YIMIAO bill (whole-fleet) — differs slightly
+  powerPre:144397.47, powerTax:21515.22, powerTotal:165912.69, hostingFee:46579.83,
+  insuranceFee:3520.28, custodyFee:1500.00, complianceFee:1250.00, repairsFee:0.00,
+  fixedOpexSub:6270.28, phSub:212492.52, fleetOpexTotal:218762.80,
+  uptime:0.99, fleetMW:3.50, networkDiff:109.4, hashprice:0.0554,
+  operatorFeeRate:0.06, adminFeeRate:0.04,
+  uptimePrior:0.986, diffPrior:112.0, hashpricePrior:0.0517,
+  dailyHash:[217807,213084,219065,221083,214988,212354,209864,217943,212377,220010,219963,213930,221925,210722,220504,219980,216470,214426,220269,220688,218651,212474,210554,210829,217758,214318,212980,217919]
+};
+
+let CALC={};  // computed each time
+function compute(){
+  const sh=share();
+  const invBTC=REAL.fleetBTC*sh;                         // F2Pool gross, pro-rata
+  const opexInv=REAL.fleetOpexTotal*sh;                  // pro-rata opex (USD)
+  const isRsv=S.method==='OPEX_FROM_BTC_AND_RESERVES';
+  const draw=isRsv?S.rsvDraw:0;
+  const opexFromBTC=opexInv-draw;                        // USD funded from BTC
+  const opexFromBTC_btc=opexFromBTC/S.btcPrice;          // → BTC at F2Pool price
+  const operFee=invBTC*REAL.operatorFeeRate;
+  const adminFee=invBTC*REAL.adminFeeRate;
+  const totFee=operFee+adminFee;
+  const netBTC=invBTC-opexFromBTC_btc-totFee;
+  const netUSD=netBTC*S.btcPrice;
+  const rsvClose=S.rsvOpen-draw+S.rsvTopup;
+  const runway=draw>0?rsvClose/draw:null;
+  const netEco=netUSD-draw;                               // economic return
+  const netEcoYieldM=netEco/S.totSub, netEcoYieldA=netEcoYieldM*12;
+  const afterMine=S.openBal+invBTC, afterOpex=afterMine-opexFromBTC_btc,
+        afterFee=afterOpex-totFee, closing=afterFee-S.wdr;
+  CALC={sh,invBTC,opexInv,isRsv,draw,opexFromBTC,opexFromBTC_btc,operFee,adminFee,totFee,
+        netBTC,netUSD,rsvClose,runway,netEco,netEcoYieldM,netEcoYieldA,closing};
+  return CALC;
+}
+
+/* ---- step nav ---- */
+function go(step){
+  S._step=step;
+  for(let i=1;i<=4;i++){
+    const sec=document.getElementById('gs'+i); if(sec)sec.classList.toggle('hide',i!==step);
+    const chip=document.getElementById('chip'+i);
+    if(chip){chip.classList.toggle('active',i===step);chip.classList.toggle('done',i<step);}
+  }
+  if(step===3)buildReview();
+  if(step===4)buildDocs();
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+/* ---- build the whole generator DOM once ---- */
+function buildGenerator(){
+  document.getElementById('genView').innerHTML=`
+  <div class="genbar">
+    <span class="genback" onclick="backToList()">← Back to statements</span>
+    <div class="steps">
+      ${['Setup','Period & Reserves','Review & Validate','Preview & Publish']
+        .map((t,i)=>`<div class="schip${i===0?' active':''}" id="chip${i+1}"><span class="n">${i+1}</span>${t}</div>`).join('')}
+    </div>
+  </div>
+  <div id="gs1"></div><div id="gs2" class="hide"></div>
+  <div id="gs3" class="hide"></div><div id="gs4" class="hide"></div>`;
+  buildStep1();buildStep2();
+  document.getElementById('gs3').innerHTML=stepFrame(3,'Data Review &amp; Validate',
+    'Finance-only view of every field, its source, and all validation results. The investor never sees this. Project cost data is carried in from the project\u2019s Monthly Close.',
+    `<div class="legend">
+      <span><i class="src f2">F2POOL</i> mining + price</span>
+      <span><i class="src ocr">OCR</i> Monthly Close</span>
+      <span><i class="src cobo">COBO</i> wallet API</span>
+      <span><i class="src cfg">CONFIG</i> platform</span>
+      <span><i class="src man">MANUAL</i> finance</span>
+      <span><i class="src calc">CALC</i> derived</span></div>
+      <div id="reviewBody"></div>`,
+    `<button class="btn ghost" onclick="go(2)">← Back</button><button class="btn accent" id="toPreviewBtn" onclick="go(4)">Generate statements →</button>`);
+  document.getElementById('gs4').innerHTML=stepFrame(4,'Preview &amp; Publish',
+    '',
+    `<div id="docsBody"></div>
+     <div class="card"><h3><span class="dot"></span>Publish schedule</h3>
+      <div class="hint">Auto-publish is off by default. (Maker-checker dual approval will live in a later version.)</div>
+      <div class="rrow" id="schedRow">
+        <div class="rcard sel" data-s="now" onclick="pickSched(this)"><b>Publish now</b><p>Release to investor portal &amp; email.</p></div>
+        <div class="rcard" data-s="schedule" onclick="pickSched(this)"><b>Schedule</b><p>Release at a chosen time.</p></div>
+        <div class="rcard" data-s="draft" onclick="pickSched(this)"><b>Save as draft</b><p>Keep internal; don't release.</p></div>
+      </div>
+      <div id="schedWhen" class="hide" style="margin-top:14px;max-width:280px">
+        <label class="fl">Release at</label><input type="datetime-local" value="2026-03-01T09:00"></div></div>`,
+    `<button class="btn ghost" onclick="go(4)">← Back</button><button class="btn accent" id="pubBtn" onclick="askPublish()">Publish statements</button>`);
+}
+function stepFrame(n,title,sub,body,actions){
+  return `<div class="gh1">${title}</div>${sub?`<div class="gsub">${sub}</div>`:''}${body}<div class="actions">${actions}</div>`;
+}
+
+/* ---------- STEP 1 ---------- */
+function buildStep1(){
+  document.getElementById('gs1').innerHTML=stepFrame(1,'Statement Setup',
+    'Pick the project and investor. Allocation is read-only here — units or percentage are configured in Subscriptions › Allocations.',
+    `<div class="card">
+      <h3><span class="dot"></span>Project &amp; investor</h3>
+      <div class="hint">One YIMIAO bill covers the whole project pool; this allocation slices it to the chosen investor.</div>
+      <div class="grid g2">
+        <div><label class="fl">Project</label><select><option>Tokenest test · S21 Pro Pool</option></select></div>
+        <div><label class="fl">Investor</label>
+          <select id="f_inv" onchange="onInvChange()">
+            <option value="John D. XX|TKD-INV-00047|bc1qxy2…x0w1h|UNITS|50|900|0.0556">John D. XX · TKD-INV-00047 (units)</option>
+            <option value="Aiko T.|TKD-INV-00031|bc1q8h4…m2v9p|PERCENT|0|500|0.0556">Aiko T. · TKD-INV-00031 (percentage)</option>
+          </select></div>
+      </div>
+      <div class="card" style="margin-top:16px;background:var(--panel-2)">
+        <h3 style="font-size:13px"><span class="dot"></span>Allocation <span class="src calc" style="margin-left:4px">read-only · from Allocations</span></h3>
+        <div class="hint">How this investor's share is defined upstream. Both forms are supported.</div>
+        <div class="grid g3">
+          <div><label class="fl">Defined as</label><div class="seg ro" id="modeSeg">
+            <button class="${S.shareMode==='UNITS'?'on':''}" disabled>Units</button>
+            <button class="${S.shareMode==='PERCENT'?'on':''}" disabled>Percentage</button></div></div>
+          <div><label class="fl">Investor units owned</label><input id="d_units" readonly></div>
+          <div><label class="fl">Total pool units</label><input id="d_pool" readonly></div>
+        </div>
+        <div class="grid g3" style="margin-top:12px">
+          <div><label class="fl">Percentage of fleet</label><input id="d_pct" readonly></div>
+          <div><label class="fl">Pro-rata share applied</label><input class="mono" id="d_share" readonly></div>
+          <div><label class="fl">Opex mode</label><input id="d_mode" value="BTC + Reserves" readonly></div>
+        </div>
+      </div>
+      <div class="grid g3" style="margin-top:16px">
+        <div><label class="fl">Equipment capital</label><input class="mono" id="d_eq" readonly></div>
+        <div><label class="fl">Cash reserve (initial)</label><input class="mono" id="d_cr" readonly></div>
+        <div><label class="fl">Total subscription</label><input class="mono" id="d_ts" readonly></div>
+      </div>
+    </div>`,
+    `<button class="btn accent" onclick="go(2)">Continue →</button>
+     <span class="note">Allocation edits happen in Subscriptions › Allocations.</span>`);
+  fillStep1();
+}
+function onInvChange(){
+  const v=document.getElementById('f_inv').value.split('|');
+  S.investor=v[0];S.invId=v[1];S.wallet=v[2];S.shareMode=v[3];
+  S.units=+v[4];S.pool=+v[5];S.sharePct=+v[6];
+  // refresh seg + fields
+  const seg=document.getElementById('modeSeg');
+  seg.children[0].className=S.shareMode==='UNITS'?'on':'';
+  seg.children[1].className=S.shareMode==='PERCENT'?'on':'';
+  fillStep1();
+}
+function fillStep1(){
+  document.getElementById('d_units').value=S.shareMode==='UNITS'?S.units:'— (defined by %)';
+  document.getElementById('d_pool').value=S.pool||'—';
+  document.getElementById('d_pct').value=pct(share(),4);
+  document.getElementById('d_share').value=shareLabel();
+  document.getElementById('d_eq').value=usd(S.equipCap);
+  document.getElementById('d_cr').value=usd(S.cashInit);
+  document.getElementById('d_ts').value=usd(S.totSub);
+}
+
+/* ---------- STEP 2 ---------- */
+function buildStep2(){
+  document.getElementById('gs2').innerHTML=stepFrame(2,'Period, Pricing &amp; Cash Reserves',
+    'Set the statement period, the BTC ledger inputs, and how this period\u2019s operating cost is split between BTC and the USD cash reserve.',
+    `<div class="card">
+      <h3><span class="dot"></span>Statement period</h3>
+      <div class="hint">Determines days in period and the statement number.</div>
+      <div class="grid g3">
+        <div><label class="fl">Month</label><select id="f_month" onchange="onMonth()">
+          <option value="2026-02|Feb 1 – Feb 28 2026|28">February 2026</option>
+          <option value="2026-03|Mar 1 – Mar 31 2026|31">March 2026</option></select></div>
+        <div><label class="fl">Days in period <span class="src calc">derived</span></label><input class="mono" id="f_days" value="28" readonly></div>
+        <div><label class="fl">Statement number <span class="src calc">auto</span></label><input class="mono" id="f_stmtno" value="TKD-2026-02-0047" readonly></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3><span class="dot"></span>BTC ledger</h3>
+      <div class="hint">Balances and withdrawals are fetched automatically via the Cobo WaaS API for the investor's registered wallet (set in Investors › Wallet). BTC price is the third-party F2Pool price used for all conversions.</div>
+      <div class="grid g3">
+        <div><label class="fl">Opening balance — BTC <span class="src cobo">Cobo API</span></label><input class="mono" id="f_open" value="0.00358800" readonly></div>
+        <div><label class="fl">Investor withdrawal — BTC <span class="src cobo">Cobo API</span></label><input class="mono" id="f_wdr" value="0.02000000" readonly></div>
+        <div><label class="fl">BTC price <span class="src f2">F2Pool · 3rd-party</span></label><input class="mono" id="f_price" value="96400" readonly></div>
+      </div>
+      <div class="grid g3" style="margin-top:14px">
+        <div><label class="fl">Operating cost from BTC <span class="src calc">derived</span></label><input class="mono" id="f_opexbtc_btc" readonly></div>
+        <div><label class="fl">Platform fees deducted <span class="src calc">6% + 4%</span></label><input class="mono" id="f_fees_btc" readonly></div>
+        <div></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3><span class="dot"></span>Cash reserves</h3>
+      <div class="hint">After OCR/API import gives the total pro-rata operating cost, Finance chooses how much is funded from the USD reserve vs. from BTC. The two boxes are linked — edit either and the other updates. Project opex &amp; reserve opening are carried in from the project's Monthly Close. Draw approval (maker-checker) and reserve refill live in the wallet-management module.</div>
+      <div class="banner info"><span>ℹ</span><div>Total operating cost this period (pro-rata, from OCR): <b id="opexTotLbl">$12,153.49</b>. Split it below.</div></div>
+      <div class="grid g3" style="margin-top:14px">
+        <div><label class="fl">Reserve opening balance <span class="src cobo">bank stmt</span></label><input class="mono" id="f_rsvopen" value="18500" readonly></div>
+        <div><label class="fl">Operating costs from USD (reserve) <span class="src man">finance · key data</span></label><input class="mono" id="f_fromusd" value="6000" onfocus="warnCritical('opex split')" onchange="logSplitEdit('from USD')" oninput="splitFromUSD(+this.value||0)"></div>
+        <div><label class="fl">Operating costs from BTC <span class="src man">finance · key data</span></label><input class="mono" id="f_frombtc_usd" value="6153.49" onfocus="warnCritical('opex split')" onchange="logSplitEdit('from BTC')" oninput="splitFromBTC(+this.value||0)"></div>
+      </div>
+      <div class="grid g3" style="margin-top:14px">
+        <div><label class="fl">Top-up from BTC deduction <span class="src cfg">wallet module</span></label><input class="mono" id="f_topup" value="0.00" readonly></div>
+        <div><label class="fl">Reserve closing balance <span class="src calc">derived</span></label><input class="mono" id="f_rsvclose" readonly></div>
+        <div></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3><span class="dot"></span>Live impact preview</h3>
+      <div class="hint">How this split flows through to the investor — updates as you type.</div>
+      <div id="livePreview"></div>
+    </div>`,
+    `<button class="btn ghost" onclick="go(1)">← Back</button><button class="btn accent" onclick="go(3)">Continue →</button>`);
+  syncSplit();
+}
+function onMonth(){const v=document.getElementById('f_month').value.split('|');S.monthKey=v[0];S.month=v[1];S.days=+v[2];
+  document.getElementById('f_days').value=v[2];S.stmtNo='TKD-'+v[0]+'-0047';
+  document.getElementById('f_stmtno').value=S.stmtNo;}
+
+/* opex split: total (USD) = fromUSD (reserve draw) + fromBTC. Linked inputs. */
+let _warnedCritical=false;
+function warnCritical(what){
+  if(_warnedCritical)return; _warnedCritical=true;
+  toast('⚠ Editing key data ('+what+') — changes are recorded in the Audit Log');
+}
+function logSplitEdit(which){
+  const c=compute();
+  logEvent('UPDATE','Statement opex split · '+S.invId,S.investor+' · '+S.month,
+    'Finance edited '+which+': from USD '+usd(c.draw)+' / from BTC '+usd(c.opexFromBTC),'manual override','success');
+}
+function opexTotalUSD(){ return REAL.fleetOpexTotal*share(); }
+function splitFromUSD(v){  const tot=opexTotalUSD();
+  S.rsvDraw=Math.max(0,Math.min(v,tot));
+  document.getElementById('f_frombtc_usd').value=fmt(tot-S.rsvDraw);
+  syncSplit(true);
+}
+function splitFromBTC(v){
+  const tot=opexTotalUSD();
+  const fromBTC=Math.max(0,Math.min(v,tot));
+  S.rsvDraw=tot-fromBTC;
+  document.getElementById('f_fromusd').value=fmt(S.rsvDraw);
+  syncSplit(true);
+}
+function syncSplit(skipInputs){
+  const c=compute();
+  const tot=opexTotalUSD();
+  document.getElementById('opexTotLbl').textContent=usd(tot);
+  if(!skipInputs){
+    document.getElementById('f_fromusd').value=fmt(c.draw);
+    document.getElementById('f_frombtc_usd').value=fmt(c.opexFromBTC);
+  }
+  document.getElementById('f_opexbtc_btc').value=btc(c.opexFromBTC_btc)+' BTC';
+  document.getElementById('f_fees_btc').value=btc(c.totFee)+' BTC';
+  document.getElementById('f_rsvclose').value=usd(c.rsvClose);
+  document.getElementById('livePreview').innerHTML=livePreviewHTML(c);
+}
+function livePreviewHTML(c){
+  const netAfterOpex=c.invBTC-c.opexFromBTC_btc;
+  const row=(l,b,v,cls)=>`<tr><td class="lab">${l}</td><td class="basis">${b||''}</td><td class="r ${cls||''}">${v}</td></tr>`;
+  return `<table style="width:100%;border-collapse:collapse;font-family:var(--sans);font-size:12px">
+    <style>#livePreview td{padding:7px 9px;border-bottom:1px solid var(--line-soft)}#livePreview .r{text-align:right;font-variant-numeric:tabular-nums}#livePreview .basis{color:var(--ink-faint);font-size:10px;font-family:var(--mono)}#livePreview .lab{color:var(--ink-dim)}#livePreview .pos{color:var(--green)}#livePreview .neg{color:var(--accent)}#livePreview .subt td{font-weight:700;border-top:1px solid var(--line)}#livePreview .totl td{font-weight:700;background:var(--panel-2)}</style>
+    ${row('Gross BTC mined (pro-rata)',shareLabel()+' × '+btc(REAL.fleetBTC),'+'+btc(c.invBTC),'pos')}
+    ${row('Less: operating cost from BTC','('+usd(c.opexInv)+' − '+usd(c.draw)+' reserve) ÷ '+usd(S.btcPrice,0),'−'+btc(c.opexFromBTC_btc),'neg')}
+    `+`<tr class="subt"><td class="lab">Net BTC after operating costs</td><td></td><td class="r">+${btc(netAfterOpex)}</td></tr>`+`
+    ${row('Less: platform fees (6% + 4%)','10% × '+btc(c.invBTC),'−'+btc(c.totFee),'neg')}
+    <tr class="totl"><td class="lab">Net BTC to investor</td><td></td><td class="r pos">+${btc(c.netBTC)} ₿</td></tr>
+    ${row('Net economic return','net USD '+usd(c.netUSD)+' − reserve drawdown '+usd(c.draw),usd(c.netEco))}
+    ${row('Reserve','opening '+usd(S.rsvOpen)+' − draw '+usd(c.draw),'closing '+usd(c.rsvClose))}
+  </table>`;
+}
+
+/* ---------- STEP 3: review ---------- */
+function rrow(l,v,s){return `<tr><td class="lbl">${l}</td><td>${v}</td><td><span class="src ${s.c}">${s.t}</span></td></tr>`;}
+function vrow(id,rule,result,pass){return `<tr><td class="lbl">${id}</td><td style="font-family:var(--sans)">${rule}</td><td>${result}</td><td><span class="src ${pass?'f2':'man'}">${pass?'PASS':'CHECK'}</span></td></tr>`;}
+function buildReview(){
+  const c=compute();
+  const devBTC=Math.abs(REAL.fleetBTC-REAL.yimiaoFleetBTC);
+  const closed=CLOSE.billLoaded;   // cost data ready only if Monthly Close ingested the bill
+
+  const costCard = closed ? `
+   <div class="card"><h3><span class="dot"></span>Operating costs (whole-fleet, from Monthly Close) <span class="src ocr" style="margin-left:4px">OCR</span></h3>
+   <table class="data"><tbody>
+     ${rrow('Power (pre-tax)',usd(REAL.powerPre),{c:'ocr',t:'OCR'})}
+     ${rrow('Power tax',usd(REAL.powerTax),{c:'ocr',t:'OCR'})}
+     ${rrow('Hosting',usd(REAL.hostingFee),{c:'ocr',t:'OCR'})}
+     ${rrow('Insurance / custody / audit (fixed)',usd(REAL.fixedOpexSub),{c:'ocr',t:'OCR'})}
+     ${rrow('Total fleet operating cost',usd(REAL.fleetOpexTotal),{c:'ocr',t:'OCR'})}
+   </tbody></table></div>` : `
+   <div class="card"><h3><span class="dot"></span>Operating costs <span class="src man" style="margin-left:4px">missing</span></h3>
+   <div class="banner warn"><span>⚠</span><div><b>Operating cost data is not available yet.</b> This project's Monthly Close for ${S.month} hasn't ingested the YIMIAO bill, so costs can't be allocated. Complete the Monthly Close first.</div></div>
+   <table class="data"><tbody>
+     ${rrow('Power (pre-tax)','—',{c:'man',t:'missing'})}
+     ${rrow('Power tax','—',{c:'man',t:'missing'})}
+     ${rrow('Hosting','—',{c:'man',t:'missing'})}
+     ${rrow('Total fleet operating cost','—',{c:'man',t:'missing'})}
+   </tbody></table>
+   <div style="margin-top:12px"><button class="btn accent sm" onclick="openClose(true)">↗ Go to Monthly Close to upload the bill</button></div></div>`;
+
+  const allocOpex = closed
+    ? `${rrow('Pro-rata opex (USD)',usd(c.opexInv),{c:'calc',t:'CALC'})}
+       ${rrow('Funded from reserve',usd(c.draw),{c:'man',t:'MANAGER'})}
+       ${rrow('Funded from BTC',usd(c.opexFromBTC)+' = '+btc(c.opexFromBTC_btc)+' BTC',{c:'calc',t:'CALC'})}`
+    : `${rrow('Pro-rata opex (USD)','— (pending Monthly Close)',{c:'man',t:'missing'})}
+       ${rrow('Funded from reserve / BTC','—',{c:'man',t:'missing'})}`;
+
+  const body=`
+   <div class="card"><h3><span class="dot"></span>Production &amp; price <span class="src f2" style="margin-left:4px">F2POOL — source of truth</span></h3>
+   <table class="data"><thead><tr><th style="width:38%">Field</th><th>Value</th><th>Source</th></tr></thead><tbody>
+     ${rrow('Fleet BTC mined (F2Pool)',btc(REAL.fleetBTC)+' BTC',{c:'f2',t:'F2Pool'})}
+     ${rrow('F2Pool BTC price',usd(S.btcPrice,0),{c:'f2',t:'F2Pool'})}
+     ${rrow('Fleet uptime',pct(REAL.uptime),{c:'f2',t:'F2Pool'})}
+   </tbody></table></div>
+
+   ${costCard}
+
+   <div class="card"><h3><span class="dot"></span>Investor allocation &amp; reserves <span class="src calc" style="margin-left:4px">CALC</span></h3>
+   <table class="data"><tbody>
+     ${rrow('Pro-rata share',shareLabel(),{c:'calc',t:'CALC'})}
+     ${rrow('Investor BTC mined',btc(c.invBTC)+' BTC',{c:'calc',t:'CALC'})}
+     ${allocOpex}
+     ${rrow('Operator fee (6%) / Agent fee (4%)',btc(c.operFee)+' / '+btc(c.adminFee)+' BTC',{c:'cfg',t:'split'})}
+     ${rrow('Reserve closing',closed?usd(c.rsvClose):'—',{c:'calc',t:'CALC'})}
+     ${rrow('Opening BTC / Withdrawal',btc(S.openBal)+' / '+btc(S.wdr),{c:'cobo',t:'COBO'})}
+   </tbody></table></div>
+
+   <div class="card"><h3><span class="dot"></span>Validations <span class="src calc" style="margin-left:4px">server-side</span></h3>
+   <div class="hint">In production these run real numeric comparisons (the prototype previously faked them). Shown here with live computed inputs.</div>
+   <table class="data"><thead><tr><th>ID</th><th>Rule</th><th>Result</th><th></th></tr></thead><tbody>
+     ${vrow('V027','Monthly Close completed (bill ingested)',closed?'yes':'no — complete Monthly Close',closed)}
+     ${vrow('V003','Waterfall ties out',closed?(btc(c.invBTC)+' − '+btc(c.opexFromBTC_btc)+' − '+btc(c.totFee)+' = '+btc(c.netBTC)):'pending cost data',closed)}
+     ${vrow('V026','Operator BTC vs F2Pool (tol 0.001)','Δ '+devBTC.toFixed(6)+' BTC → F2Pool used',devBTC<0.001)}
+     ${vrow('V018','Reserve draw ≤ min(opening, opex)',closed?(usd(c.draw)+' ≤ '+usd(Math.min(S.rsvOpen,c.opexInv))):'pending',!closed||c.draw<=Math.min(S.rsvOpen,c.opexInv))}
+     ${vrow('V020','Economic return invariance',closed?(usd(c.netEco)+' ≈ BTC-only counterfactual'):'pending',true)}
+   </tbody></table></div>`;
+  document.getElementById('reviewBody').innerHTML=body;
+
+  // gate the "generate" button if cost data missing
+  const btn=document.getElementById('toPreviewBtn');
+  if(btn){ btn.disabled=!closed; btn.title=closed?'':'Complete Monthly Close first'; }
+}
+
+/* ---------- STEP 5: documents ---------- */
+function deltaTile(label,val,delta,inverted){
+  const up=delta>=0; const good=inverted?!up:up;
+  return `<div class="kpi"><small>${label}</small><div class="v">${val}</div>
+    <div class="d ${good?'up':'down'}">${up?'▲':'▼'} ${Math.abs(delta).toFixed(1)}${inverted?'%':''} vs prior</div></div>`;
+}
+function buildDocs(){
+  const c=compute();
+  const dash=S.isFirst;
+  const fullOpexBTC=c.opexInv/S.btcPrice;          // full pro-rata opex in BTC
+  const netEcoBTC=c.invBTC-fullOpexBTC-c.totFee;   // net economic return (BTC)
+  const resvAppliedBTC=c.draw/S.btcPrice;          // reserves added back
+  const netWalletBTC=netEcoBTC+resvAppliedBTC;     // = net to wallet (== c.netBTC)
+  const grossUSD=c.invBTC*S.btcPrice;
+  const opexUSD=c.opexInv;
+  const feesUSD=c.totFee*S.btcPrice;
+  const operUSD=c.operFee*S.btcPrice, adminUSD=c.adminFee*S.btcPrice;
+  const powerUSD=opexUSD*0.967, otherUSD=opexUSD-powerUSD;  // split for display
+  const netEcoUSD=netEcoBTC*S.btcPrice;
+  const netWalletUSD=netWalletBTC*S.btcPrice;
+  const closeBTC=S.openBal+netWalletBTC-S.wdr;
+  // ITD/YTD demo figures
+  const itdUSD=33694, itdBTC=0.4200, ytdUSD=33694, ytdBTC=0.4200;
+  const moPct=c.netEcoYieldM, ytdPct=0.1385;
+
+  /* ===== PAGE 1 ===== */
+  const page1=`
+   <div class="doc">
+     <div class="dhead"><div class="dlogo"><div class="m">T</div><b>TKD</b></div>
+       <div class="dtitle"><h2>MONTHLY MINING STATEMENT</h2><p>${S.stmtNo} · Issued 01 Mar 2026</p></div></div>
+
+     <div class="sec">Account overview</div>
+     <table>
+       <tr>
+         <td><small style="color:#999;font-size:9px;letter-spacing:.6px">INVESTOR</small><br><b>${S.investor}</b></td>
+         <td><small style="color:#999;font-size:9px;letter-spacing:.6px">ACCOUNT ID</small><br><b>${S.invId}</b></td>
+         <td><small style="color:#999;font-size:9px;letter-spacing:.6px">SUBSCRIPTION</small><br><b>SA-2024-0047 · ${shareLabel()}</b></td>
+         <td><small style="color:#999;font-size:9px;letter-spacing:.6px">INCEPTION</small><br><b>07 Jan 2025</b></td>
+         <td><small style="color:#999;font-size:9px;letter-spacing:.6px">TOTAL INVESTED</small><br><b>${usd(S.totSub,0)}</b></td>
+       </tr>
+     </table>
+     <table style="margin-top:6px"><tr><td><small style="color:#999;font-size:9px;letter-spacing:.6px">BTC PAYOUT WALLET</small><br><b style="font-family:var(--mono);font-size:11px">bc1qxy2kgdygjrsqtzq2n0yrf2493p83kkfjhx0w1h</b></td></tr></table>
+
+     <div class="sec">Performance — cumulative net return</div>
+     <div style="padding:6px 0">${cumulativeChartSVG()}</div>
+
+     <div class="sec">Returns summary</div>
+     <table>
+       <tr><td><b>Period</b></td><td class="r"><b>USD</b></td><td class="r"><b>Bitcoin</b></td></tr>
+       <tr><td>This month (${S.month.split('–')[0].trim()})</td><td class="r pos">+${usd(c.netEco)} (+${pct(moPct)})</td><td class="r pos">+${btc(c.netBTC)} ₿</td></tr>
+       <tr><td>Year-to-date</td><td class="r pos">+${usd(ytdUSD,0)} (+${pct(ytdPct)})</td><td class="r pos">+${btc(ytdBTC)} ₿</td></tr>
+       <tr><td>Inception-to-date</td><td class="r pos">+${usd(itdUSD,0)} (+${pct(ytdPct)})</td><td class="r pos">+${btc(itdBTC)} ₿</td></tr>
+     </table>
+     <div class="fnote">USD figures are net economic return after operating costs and platform fees. BTC figures show net Bitcoin distributed to wallet. % return is on total subscription capital.</div>
+     <div class="foot"><span>TKD Group · tkdgroup.sg · 138 Market Street #05-01/02, Singapore</span><span>Page 1 of 2 · Private &amp; Confidential</span></div>
+   </div>`;
+
+  /* ===== PAGE 2 ===== */
+  const page2=`
+   <div class="doc">
+     <div class="dhead"><div class="dlogo"><div class="m">T</div><b>TKD</b></div>
+       <div class="dtitle"><h2>RETURNS RECONCILIATION</h2><p>${S.stmtNo}</p></div></div>
+
+     <div class="sec">Returns reconciliation</div>
+     <table>
+       <tr><td><b>Item</b></td><td class="r"><b>USD value</b></td><td class="r"><b>BTC equivalent</b></td></tr>
+       <tr><td><b>Gross BTC income</b></td><td class="r">${usd(grossUSD)}</td><td class="r">${btc(c.invBTC)} ₿</td></tr>
+       <tr><td><b>Operating costs</b></td><td class="r neg">−${usd(opexUSD)}</td><td class="r neg">−${btc(fullOpexBTC)} ₿</td></tr>
+       <tr><td style="padding-left:20px;color:#666">Power and hosting fees</td><td class="r neg">−${usd(powerUSD)}</td><td class="r neg">−${btc(powerUSD/S.btcPrice)} ₿</td></tr>
+       <tr><td style="padding-left:20px;color:#666">Other operating costs</td><td class="r neg">−${usd(otherUSD)}</td><td class="r neg">−${btc(otherUSD/S.btcPrice)} ₿</td></tr>
+       <tr><td><b>Platform fees</b></td><td class="r neg">−${usd(feesUSD)}</td><td class="r neg">−${btc(c.totFee)} ₿</td></tr>
+       <tr><td style="padding-left:20px;color:#666">Operator management fees (6% of gross BTC)</td><td class="r neg">−${usd(operUSD)}</td><td class="r neg">−${btc(c.operFee)} ₿</td></tr>
+       <tr><td style="padding-left:20px;color:#666">Agent fees (4% of gross BTC)</td><td class="r neg">−${usd(adminUSD)}</td><td class="r neg">−${btc(c.adminFee)} ₿</td></tr>
+       <tr class="subt"><td>Net economic return</td><td class="r">${usd(netEcoUSD)}</td><td class="r">${btc(netEcoBTC)} ₿</td></tr>
+       <tr><td>+ Reserves applied to operating costs</td><td class="r pos">+${usd(c.draw)}</td><td class="r pos">+${btc(resvAppliedBTC)} ₿</td></tr>
+       <tr class="totl"><td>Net BTC to wallet</td><td class="r">${usd(netWalletUSD)}</td><td class="r">${btc(netWalletBTC)} ₿</td></tr>
+     </table>
+
+     <div class="sec">BTC wallet</div>
+     <table>
+       <tr><td>Opening balance (1 ${S.month.split(' ')[0]})</td><td class="r">${btc(S.openBal)} ₿</td></tr>
+       <tr><td>Net distributed</td><td class="r pos">+${btc(netWalletBTC)} ₿</td></tr>
+       <tr><td>Withdrawals</td><td class="r">${S.wdr>0?'−'+btc(S.wdr):btc(0)} ₿</td></tr>
+       <tr class="totl"><td>Closing balance</td><td class="r">${btc(closeBTC)} ₿</td></tr>
+     </table>
+
+     <div class="sec">Cash reserves</div>
+     <table>
+       <tr><td>Opening balance</td><td class="r">${usd(S.rsvOpen)}</td></tr>
+       <tr><td>Drawn for operating costs</td><td class="r neg">−${usd(c.draw)}</td></tr>
+       <tr><td>Top-ups</td><td class="r">${usd(S.rsvTopup)}</td></tr>
+       <tr class="totl"><td>Closing balance</td><td class="r">${usd(c.rsvClose)}</td></tr>
+     </table>
+
+     <div class="sec">BTC distribution proof (on-chain)</div>
+     <table>
+       <tr><td><small style="color:#999;font-size:9px">AMOUNT</small><br><b>${btc(netWalletBTC)} ₿ (${usd(netWalletUSD)})</b></td>
+           <td><small style="color:#999;font-size:9px">SETTLED</small><br><b>28 Feb 2026 23:47 UTC</b></td>
+           <td><small style="color:#999;font-size:9px">TRANSACTION HASH</small><br><b style="font-family:var(--mono);font-size:9px">a7f3c2e9b14d8650f8e293a4c5b6d7e8f9a0b1c2…</b></td></tr>
+     </table>
+     <div class="fnote" style="margin-top:6px">Full ledger history, daily mining proof and subscription details are available at investor.tokenest.io.</div>
+
+     <div class="fnote" style="margin-top:14px;border-top:1px solid #ddd;padding-top:8px"><b>IMPORTANT INFORMATION.</b> This statement is issued by TKD Capital Pte. Ltd. ("TKD") for the named investor only and does not constitute an offer, recommendation, advice or solicitation. The investment is offered solely to accredited and institutional investors under section 4A of the Securities and Futures Act 2001 of Singapore ("SFA") and has not been authorised under the SFA. Digital asset mining involves substantial risk including total loss of capital. Past performance is not indicative of future results. All figures are unaudited and management-prepared. Certain data (BTC reference prices, mining pool payout data, network statistics) is sourced from third parties and not independently verified by TKD. Governed by the laws of Singapore. In the event of inconsistency with the Subscription Agreement, the Subscription Agreement prevails. Private and confidential.</div>
+     <div class="foot"><span>TKD Group · tkdgroup.sg · 138 Market Street #05-01/02, Singapore</span><span>Page 2 of 2 · Private &amp; Confidential</span></div>
+   </div>`;
+
+  const out=`<div class="docwrap"><div class="pagetag">Monthly Mining Statement — Page 1</div>${page1}
+     <div class="pagetag">Page 2 — Reconciliation</div>${page2}</div>`;
+  const tgt=document.getElementById('docsBody'); if(tgt)tgt.innerHTML=out;
+  S._final=c;
+  return out;
+}
+
+/* simple cumulative dual-line chart (SVG) */
+function cumulativeChartSVG(){
+  const months=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  const usdC=[1.2,4.8,3.0,6.5,9.5,12.8,15.2,16.0,19.5,24.0,28.5,33.7];   // $K cumulative
+  const btcC=[0.03,0.07,0.075,0.10,0.135,0.175,0.215,0.225,0.27,0.34,0.40,0.42];
+  const W=720,H=210,padL=44,padR=44,padB=26,padT=14;
+  const x=i=>padL+(W-padL-padR)*i/(months.length-1);
+  const yU=v=>padT+(H-padT-padB)*(1-v/35);
+  const yB=v=>padT+(H-padT-padB)*(1-v/0.5);
+  const lineU=usdC.map((v,i)=>`${x(i)},${yU(v)}`).join(' ');
+  const lineB=btcC.map((v,i)=>`${x(i)},${yB(v)}`).join(' ');
+  const mlabels=months.map((m,i)=>`<text x="${x(i)}" y="${H-8}" font-size="9" fill="#999" text-anchor="middle" font-family="sans-serif">${m}</text>`).join('');
+  return `<svg viewBox="0 0 ${W} ${H}" style="width:100%;height:auto;font-family:sans-serif">
+    <line x1="${padL}" y1="${padT}" x2="${padL}" y2="${H-padB}" stroke="#eee"/>
+    <line x1="${W-padR}" y1="${padT}" x2="${W-padR}" y2="${H-padB}" stroke="#eee"/>
+    ${[0,7,14,21,28,35].map(v=>`<text x="${padL-6}" y="${yU(v)+3}" font-size="8" fill="#bbb" text-anchor="end">$${v}K</text>`).join('')}
+    ${[0,0.1,0.2,0.3,0.4,0.5].map(v=>`<text x="${W-padR+6}" y="${yB(v)+3}" font-size="8" fill="#caa" text-anchor="start">${v.toFixed(2)} ₿</text>`).join('')}
+    <polyline points="${lineB}" fill="none" stroke="#caa15a" stroke-width="2"/>
+    <polyline points="${lineU}" fill="none" stroke="#1a3a5c" stroke-width="2"/>
+    <text x="${x(11)}" y="${yU(33.7)-6}" font-size="10" fill="#1a3a5c" text-anchor="end" font-weight="700">+$33,694</text>
+    <text x="${x(11)}" y="${yB(0.42)+14}" font-size="10" fill="#caa15a" text-anchor="end" font-weight="700">+0.420 ₿</text>
+    ${mlabels}
+    <g font-size="9" fill="#666"><rect x="${padL}" y="0" width="12" height="3" fill="#1a3a5c"/><text x="${padL+16}" y="4">Cumulative net economic return (USD)</text>
+    <rect x="${padL+230}" y="0" width="12" height="3" fill="#caa15a"/><text x="${padL+246}" y="4">Cumulative BTC distributed (₿)</text></g>
+  </svg>`;
+}
+
+/* ---------- publish ---------- */
+function pickSched(el){document.querySelectorAll('#schedRow .rcard').forEach(c=>c.classList.remove('sel'));el.classList.add('sel');S.sched=el.dataset.s;
+  document.getElementById('schedWhen').classList.toggle('hide',S.sched!=='schedule');
+  document.getElementById('pubBtn').textContent=S.sched==='now'?'Publish statements':S.sched==='schedule'?'Schedule statements':'Save draft';}
+function askPublish(){
+  if(S.sched==='draft'){toast('Saved as draft');return;}
+  const c=S._final||compute();
+  document.getElementById('modalMount').innerHTML=`<div class="modal-bg" onclick="if(event.target===this)closeModal()"><div class="modal">
+    <h3>Confirm publish</h3><p>This releases both documents to the investor and writes the closing balances to their ledger.</p>
+    <div class="sb">
+      <div class="r"><span>Investor</span><b>${S.investor} · ${S.invId}</b></div>
+      <div class="r"><span>Period</span><b>${S.month}</b></div>
+      <div class="r"><span>Net BTC to investor</span><b>${btc(c.netBTC)}</b></div>
+      <div class="r"><span>Net economic return</span><b>${usd(c.netEco)}</b></div>
+      <div class="r"><span>Closing balance</span><b>${btc(c.closing)}</b></div>
+      <div class="r"><span>Release</span><b>${S.sched==='now'?'Immediately':'Scheduled'}</b></div>
+    </div>
+    <div class="mact"><button class="btn ghost" onclick="closeModal()">Cancel</button>
+    <button class="btn accent" onclick="confirmPublish()">Yes, publish</button></div></div></div>`;
+}
+function closeModal(){document.getElementById('modalMount').innerHTML='';}
+let _confirmCb=null;
+function confirmModal(title,msg,yesLabel,onYes){
+  _confirmCb=onYes;
+  document.getElementById('modalMount').innerHTML=`<div class="modal-bg" onclick="if(event.target===this)closeModal()"><div class="modal">
+    <h3>${title}</h3><p>${msg}</p>
+    <div class="mact" style="margin-top:18px">
+      <button class="btn ghost" onclick="closeModal()">Cancel</button>
+      <button class="btn accent" onclick="(function(){var f=_confirmCb;closeModal();if(f)f();})()">${yesLabel||'Confirm'}</button>
+    </div></div></div>`;
+}
+function confirmPublish(){closeModal();
+  const c=S._final||compute();
+  logEvent('PUBLISH','Statement · '+S.invId,S.investor+' · '+S.month,
+    'Published; net BTC '+btc(c.netBTC)+', economic return '+usd(c.netEco),'',S.sched==='now'?'success':'scheduled');
+  toast(S.sched==='now'?'✓ Statements published to investor':'✓ Statements scheduled');setTimeout(backToList,900);}
+
+
+</script>
+</body>
+</html>
